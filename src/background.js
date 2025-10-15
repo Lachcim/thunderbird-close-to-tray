@@ -6,8 +6,6 @@ function handleWindow(window) {
 }
 
 const openWindows = await messenger.windows.getAll();
-for (const window of openWindows) {
-    handleWindow(window);
-}
+openWindows.forEach(handleWindow);
 
 await messenger.windows.onCreated.addListener(handleWindow);
