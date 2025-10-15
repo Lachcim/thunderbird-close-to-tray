@@ -4,8 +4,10 @@ class TrayOnClose extends ExtensionCommon.ExtensionAPI {
     getAPI(context) {
         async function trayOnClose(windowId) {
             const window = context.extension.windowManager.get(windowId, context).window;
+            const baseWindow = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
+
             window.close = () => {
-                console.log("close prevented");
+                Cc["@mozilla.org/messenger/osintegration;1"].getService(Ci.nsIMessengerWindowsIntegration).hideWindow(baseWindow);
             };
         }
 
