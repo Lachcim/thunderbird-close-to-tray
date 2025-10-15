@@ -1,0 +1,20 @@
+[
+    {
+        "namespace": "trayOnClose",
+        "functions": [
+            {
+                "name": "trayOnClose",
+                "type": "function",
+                "description": "Causes the given window to be moved to the tray when it is closed.",
+                "async": true,
+                "parameters": [
+                    {
+                        "name": "windowId",
+                        "type": "integer",
+                        "description": "ID of the affected window."
+                    }
+                ]
+            }
+        ]
+    }
+]
