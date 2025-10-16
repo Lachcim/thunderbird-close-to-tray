@@ -8,6 +8,10 @@ class TrayOnClose extends ExtensionCommon.ExtensionAPI {
 
             function handleClose(event) {
                 event?.preventDefault();
+
+                // minimize required, otherwise the window will be restored (un-maximized) when the tray icon is clicked
+                window.minimize();
+
                 Cc["@mozilla.org/messenger/osintegration;1"].getService(Ci.nsIMessengerWindowsIntegration).hideWindow(baseWindow);
             }
 
@@ -16,9 +20,7 @@ class TrayOnClose extends ExtensionCommon.ExtensionAPI {
         }
 
         return {
-            trayOnClose: {
-                trayOnClose
-            }
+            trayOnClose: { trayOnClose }
         };
     }
 };
