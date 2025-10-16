@@ -5,7 +5,8 @@ function handleWindow(window) {
     }
 }
 
+// make sure addListener is called before first await to ensure it registers for non-persistent background page
+messenger.windows.onCreated.addListener(handleWindow);
+
 const openWindows = await messenger.windows.getAll();
 openWindows.forEach(handleWindow);
-
-await messenger.windows.onCreated.addListener(handleWindow);

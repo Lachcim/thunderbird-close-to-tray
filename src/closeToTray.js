@@ -1,17 +1,20 @@
 const { ExtensionCommon } = ChromeUtils.importESModule("resource://gre/modules/ExtensionCommon.sys.mjs");
 
-class CloseToTray extends ExtensionCommon.ExtensionAPI {
-    activeWindows = new Set();
+const activeWindows = new Set();
 
+class CloseToTray extends ExtensionCommon.ExtensionAPI {
     getAPI(context) {
-        const closeToTray = async windowId => {
+        function closeToTray(windowId) {
+            if (activeWindows.has(windowId))
+                return;
+
             const window = context.extension.windowManager.get(windowId, context).window;
             const baseWindow = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
 
-            const handleClose = event => {
+            function handleClose(event) {
                 // only hide Thunderbird when there are no other main windows
-                if (this.activeWindows.size > 1) {
-                    this.activeWindows.delete(windowId);
+                if (activeWindows.size > 1) {
+                    activeWindows.delete(windowId);
 
                     window.closeToTrayClose();
                     return;
@@ -23,7 +26,7 @@ class CloseToTray extends ExtensionCommon.ExtensionAPI {
                 window.minimize();
 
                 Cc["@mozilla.org/messenger/osintegration;1"].getService(Ci.nsIMessengerWindowsIntegration).hideWindow(baseWindow);
-            };
+            }
 
             // handle close from taskbar
             window.addEventListener("close", handleClose);
@@ -32,8 +35,8 @@ class CloseToTray extends ExtensionCommon.ExtensionAPI {
             window.closeToTrayClose = window.close;
             window.close = handleClose;
 
-            this.activeWindows.add(windowId);
-        };
+            activeWindows.add(windowId);
+        }
 
         return {
             closeToTray: { closeToTray }
