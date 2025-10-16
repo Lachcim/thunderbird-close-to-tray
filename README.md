@@ -1,3 +1,5 @@
+![Close to Tray](src/img/128.png)
+
 # Close to Tray
 
 A Thunderbird extension for Windows that moves the main window to the tray when you close it. `X` moves Thunderbird to the tray, `_` minimizes it – just like Discord. Keep your mail client running at all times, out of sight.

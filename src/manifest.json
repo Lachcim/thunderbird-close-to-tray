@@ -12,6 +12,13 @@
             "strict_min_version": "50.0"
         }
     },
+    "icons": {
+        "512": "img/512.png",
+        "256": "img/256.png",
+        "128": "img/128.png",
+        "64": "img/64.png",
+        "32": "img/32.png"
+    },
     "background": {
         "scripts": ["background.js"],
         "type": "module"
