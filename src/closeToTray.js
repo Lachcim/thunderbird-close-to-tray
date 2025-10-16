@@ -4,7 +4,7 @@ const activeWindows = new Set();
 
 class CloseToTray extends ExtensionCommon.ExtensionAPI {
     getAPI(context) {
-        function closeToTray(windowId) {
+        function registerWindow(windowId) {
             if (activeWindows.has(windowId))
                 return;
 
@@ -39,7 +39,7 @@ class CloseToTray extends ExtensionCommon.ExtensionAPI {
         }
 
         return {
-            closeToTray: { closeToTray }
+            closeToTray: { registerWindow }
         };
     }
 };

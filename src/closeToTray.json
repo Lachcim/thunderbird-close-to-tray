@@ -3,7 +3,7 @@
         "namespace": "closeToTray",
         "functions": [
             {
-                "name": "closeToTray",
+                "name": "registerWindow",
                 "type": "function",
                 "description": "Causes the given window to be moved to the tray when it is closed.",
                 "async": true,
