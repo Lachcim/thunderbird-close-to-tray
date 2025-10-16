@@ -1,9 +1,9 @@
 [
     {
-        "namespace": "trayOnClose",
+        "namespace": "closeToTray",
         "functions": [
             {
-                "name": "trayOnClose",
+                "name": "closeToTray",
                 "type": "function",
                 "description": "Causes the given window to be moved to the tray when it is closed.",
                 "async": true,

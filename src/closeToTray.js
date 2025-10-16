@@ -1,8 +1,8 @@
 const { ExtensionCommon } = ChromeUtils.importESModule("resource://gre/modules/ExtensionCommon.sys.mjs");
 
-class TrayOnClose extends ExtensionCommon.ExtensionAPI {
+class CloseToTray extends ExtensionCommon.ExtensionAPI {
     getAPI(context) {
-        async function trayOnClose(windowId) {
+        async function closeToTray(windowId) {
             const window = context.extension.windowManager.get(windowId, context).window;
             const baseWindow = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
 
@@ -20,9 +20,9 @@ class TrayOnClose extends ExtensionCommon.ExtensionAPI {
         }
 
         return {
-            trayOnClose: { trayOnClose }
+            closeToTray: { closeToTray }
         };
     }
 };
 
-this.trayOnClose = TrayOnClose;
+this.closeToTray = CloseToTray;

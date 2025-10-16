@@ -1,7 +1,7 @@
 function handleWindow(window) {
     // only handle main windows
     if (window.type == "normal") {
-        messenger.trayOnClose.trayOnClose(window.id);
+        messenger.closeToTray.closeToTray(window.id);
     }
 }
 

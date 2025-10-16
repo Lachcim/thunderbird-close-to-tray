@@ -1,14 +1,14 @@
 {
     "manifest_version": 3,
-    "name": "Tray on Close (for Windows)",
-    "short_name": "Tray on Close",
-    "description": "X moves the window to the tray, _ minimizes it. Just like Discord.",
+    "name": "Close to Tray (for Windows)",
+    "short_name": "Close to Tray",
+    "description": "X moves Thunderbird to the tray, _ minimizes it. Just like Discord.",
     "author": "Lachcim",
-    "homepage_url": "https://github.com/Lachcim/thunderbird-tray-on-close",
+    "homepage_url": "https://github.com/Lachcim/thunderbird-close-to-tray",
     "version": "1.0",
     "browser_specific_settings": {
         "gecko": {
-            "id": "@tray-on-close.lachcim",
+            "id": "@close-to-tray.lachcim",
             "strict_min_version": "50.0"
         }
     },
@@ -17,12 +17,12 @@
         "type": "module"
     },
     "experiment_apis": {
-        "trayOnClose": {
-            "schema": "trayOnClose.json",
+        "closeToTray": {
+            "schema": "closeToTray.json",
             "parent": {
                 "scopes": ["addon_parent"],
-                "paths": [["trayOnClose"]],
-                "script": "trayOnClose.js"
+                "paths": [["closeToTray"]],
+                "script": "closeToTray.js"
             }
         }
     }
