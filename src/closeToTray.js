@@ -23,6 +23,10 @@ function registerWindow(context, windowId) {
         // minimize required, otherwise the window will be restored (un-maximized) when the tray icon is clicked
         window.minimize();
 
+        // if mail.minimizeToTray is enabled, let it handle the hiding
+        if (Services.prefs.getBoolPref("mail.minimizeToTray", false))
+            return;
+
         Cc["@mozilla.org/messenger/osintegration;1"].getService(Ci.nsIMessengerWindowsIntegration).hideWindow(baseWindow);
     }
 
