@@ -9,7 +9,8 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "@close-to-tray.lachcim",
-            "strict_min_version": "128.0"
+            "strict_min_version": "128.0",
+            "strict_max_version": "144.*"
         }
     },
     "icons": {
