@@ -26,3 +26,7 @@ Enabling this option does not prevent you from accidentally closing your mail cl
 Minimize on Close makes the close button behave like the minimize button. It prevents you from accidentally closing Thunderbird, but it effectively makes it impossible to remove it from your taskbar, unless you enable `mail.minimizeToTray`. Close to Tray retains the distinction between closing to tray and minimizing.
 
 Minimize on Close knows nothing about the tray. If you want to move your window to the tray, the author suggests that you enable `mail.minimizeToTray` or use an external program. In Close to Tray, the tray is a first-class citizen – no tinkering required.
+
+## Build instructions
+
+On a typical Linux system or WSL, run `make`.
