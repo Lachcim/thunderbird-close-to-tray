@@ -32,5 +32,8 @@
                 "script": "closeToTray.js"
             }
         }
-    }
+    },
+    "permissions": [
+        "notifications"
+    ]
 }

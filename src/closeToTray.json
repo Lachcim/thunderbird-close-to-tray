@@ -15,6 +15,13 @@
                     }
                 ]
             }
+        ],
+        "events": [
+            {
+                "name": "onFail",
+                "type": "function",
+                "description": "Called when Close to Tray fails because there is no tray."
+            }
         ]
     }
 ]

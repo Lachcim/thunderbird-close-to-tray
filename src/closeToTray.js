@@ -1,6 +1,7 @@
 const { ExtensionCommon } = ChromeUtils.importESModule("resource://gre/modules/ExtensionCommon.sys.mjs");
 
 const activeWindows = new Set();
+const failListeners = [];
 
 function registerWindow(context, windowId) {
     if (activeWindows.has(windowId))
@@ -19,6 +20,12 @@ function registerWindow(context, windowId) {
         }
 
         event?.preventDefault();
+
+        // check if system supports tray
+        if (!Ci.nsIMessengerWindowsIntegration) {
+            failListeners.forEach(listener => listener.async());
+            return;
+        }
 
         // minimize required, otherwise the window will be restored (un-maximized) when the tray icon is clicked
         window.minimize();
@@ -42,9 +49,16 @@ function registerWindow(context, windowId) {
 
 class CloseToTray extends ExtensionCommon.ExtensionAPI {
     getAPI(context) {
+        const onFail = new ExtensionCommon.EventManager({
+            context,
+            name: "closeToTray.onFail",
+            register: listener => { failListeners.push(listener); }
+        }).api();
+
         return {
             closeToTray: {
-                registerWindow: registerWindow.bind(null, context)
+                registerWindow: registerWindow.bind(null, context),
+                onFail
             }
         };
     }
