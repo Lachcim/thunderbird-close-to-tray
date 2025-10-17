@@ -1,7 +1,7 @@
 const { ExtensionCommon } = ChromeUtils.importESModule("resource://gre/modules/ExtensionCommon.sys.mjs");
 
 const activeWindows = new Set();
-const failListeners = [];
+const emitter = new ExtensionCommon.EventEmitter();
 
 function registerWindow(context, windowId) {
     if (activeWindows.has(windowId))
@@ -23,7 +23,7 @@ function registerWindow(context, windowId) {
 
         // check if system supports tray
         if (!Ci.nsIMessengerWindowsIntegration) {
-            failListeners.forEach(listener => listener.async());
+            emitter.emit("closeToTray-fail");
             return;
         }
 
@@ -47,12 +47,28 @@ function registerWindow(context, windowId) {
     activeWindows.add(windowId);
 }
 
-class CloseToTray extends ExtensionCommon.ExtensionAPI {
+class CloseToTray extends ExtensionCommon.ExtensionAPIPersistent {
+    PERSISTENT_EVENTS = {
+        onFail: ({ fire }) => {
+            const listener = async () => {
+                await fire.wakeup?.();
+                fire.async();
+            };
+
+            emitter.on("closeToTray-fail", listener);
+            return {
+                unregister: () => { emitter.off("closeToTray-fail", listener); },
+                convert: newFire => { fire = newFire; },
+            };
+        }
+    }
+
     getAPI(context) {
         const onFail = new ExtensionCommon.EventManager({
             context,
-            name: "closeToTray.onFail",
-            register: listener => { failListeners.push(listener); }
+            module: "closeToTray",
+            event: "onFail",
+            extensionApi: this
         }).api();
 
         return {
