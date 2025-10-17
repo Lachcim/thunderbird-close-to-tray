@@ -1,21 +1,22 @@
 const { ExtensionCommon } = ChromeUtils.importESModule("resource://gre/modules/ExtensionCommon.sys.mjs");
 
-const activeWindows = new Set();
+const restorers = new Map();
 const emitter = new ExtensionCommon.EventEmitter();
 
 function registerWindow(context, windowId) {
-    if (activeWindows.has(windowId))
+    if (restorers.has(windowId))
         return;
 
     const window = context.extension.windowManager.get(windowId, context).window;
     const baseWindow = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
+    const closeWindow = window.close;
 
     function handleClose(event) {
         // only hide Thunderbird when there are no other main windows
-        if (activeWindows.size > 1) {
-            activeWindows.delete(windowId);
+        if (restorers.size > 1) {
+            restorers.delete(windowId);
 
-            window.closeToTrayClose();
+            closeWindow();
             return;
         }
 
@@ -41,10 +42,12 @@ function registerWindow(context, windowId) {
     window.addEventListener("close", handleClose);
 
     // handle close from X button
-    window.closeToTrayClose = window.close;
     window.close = handleClose;
 
-    activeWindows.add(windowId);
+    restorers.set(windowId, () => {
+        window.close = closeWindow;
+        window.removeEventListener("close", handleClose);
+    });
 }
 
 class CloseToTray extends ExtensionCommon.ExtensionAPIPersistent {
@@ -77,6 +80,11 @@ class CloseToTray extends ExtensionCommon.ExtensionAPIPersistent {
                 onFail
             }
         };
+    }
+
+    onShutdown() {
+        restorers.forEach(restore => restore());
+        restorers.clear();
     }
 };
 
