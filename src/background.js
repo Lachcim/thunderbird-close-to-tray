@@ -5,12 +5,23 @@ function handleWindow(window) {
     }
 }
 
-function handleFailure() {
+function handleFailure(error) {
+    function getDiagnostic() {
+        if (error.code == "noBetterbird")
+            return "Thunderbird on Linux lacks tray support. Consider using Betterbird instead.";
+        if (error.code == "noDesktopEnvironment")
+            return "Couldn't identify your desktop environment.";
+        if (error.code == "unsupportedDesktopEnvironment")
+            return `Your desktop environment ("${error.desktopEnvironment}") is unsupported. Try adjusting mail.minimizeToTray.supportedDesktops.`;
+
+        return null;
+    }
+
     messenger.notifications.create(
         "closeToTrayFailed",
         {
             title: "Couldn't move Thunderbird to the tray",
-            message: "Close to Tray couldn't find your tray. Are you using Windows?",
+            message: getDiagnostic(),
             type: "basic",
             iconUrl: "img/256.png"
         }

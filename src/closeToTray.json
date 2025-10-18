@@ -20,7 +20,30 @@
             {
                 "name": "onFail",
                 "type": "function",
-                "description": "Called when Close to Tray fails because there is no tray."
+                "description": "Called when Close to Tray fails because there is no tray.",
+                "parameters": [
+                    {
+                        "name": "error",
+                        "$ref": "closeToTray.Error"
+                    }
+                ]
+            }
+        ],
+        "types": [
+            {
+                "id": "Error",
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "Error code"
+                    },
+                    "desktopEnvironment": {
+                        "type": "string",
+                        "optional": true,
+                        "description": "The detected desktop environment"
+                    }
+                }
             }
         ]
     }
