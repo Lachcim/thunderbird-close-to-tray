@@ -1,5 +1,5 @@
 {
-    "manifest_version": 3,
+    "manifest_version": 2,
     "name": "Close to Tray",
     "short_name": "Close to Tray",
     "description": "X moves Thunderbird to the tray, _ minimizes it. Just like Discord.",
@@ -9,7 +9,7 @@
     "browser_specific_settings": {
         "gecko": {
             "id": "@close-to-tray.lachcim",
-            "strict_min_version": "128.0",
+            "strict_min_version": "76.0",
             "strict_max_version": "144.*"
         }
     },
@@ -21,8 +21,7 @@
         "32": "img/32.png"
     },
     "background": {
-        "scripts": ["background.js"],
-        "type": "module"
+        "scripts": ["background.js"]
     },
     "experiment_apis": {
         "closeToTray": {

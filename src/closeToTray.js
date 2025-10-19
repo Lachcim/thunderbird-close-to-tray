@@ -1,4 +1,13 @@
-const { ExtensionCommon } = ChromeUtils.importESModule("resource://gre/modules/ExtensionCommon.sys.mjs");
+// ExtensionCommon migrated from JSM to ESM
+const { ExtensionCommon } = (() => {
+    try { return ChromeUtils.importESModule("resource://gre/modules/ExtensionCommon.sys.mjs"); }
+    catch { return ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm"); }
+})();
+
+// the Services global is not available on old versions of Thunderbird
+const preferences = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+const appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
+const gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
 
 const restorers = new Map();
 const emitter = new ExtensionCommon.EventEmitter();
@@ -13,12 +22,16 @@ function getTrayService() {
         return { service: Ci.nsIMessengerWindowsIntegration, error: null };
 
     // this is Linux, check if tray is supported through Betterbird
-    if (!Ci.nsIMessengerUnixIntegration)
+    if (!Ci.nsIMessengerUnixIntegration) {
+        if (AppConstants.MOZ_APP_DISPLAYNAME_DO_NOT_USE == "Betterbird")
+            return { service: null, error: { code: "oldBetterbird" } };
+
         return { service: null, error: { code: "noBetterbird" } };
+    }
 
     // this is Betterbird on Linux, check if desktop environment is supported
-    const desktopEnvironment = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).desktopEnvironment;
-    const supportedDesktops = Services.prefs.getStringPref("mail.minimizeToTray.supportedDesktops");
+    const desktopEnvironment = appInfo.desktopEnvironment ?? gfxInfo.desktopEnvironment;
+    const supportedDesktops = preferences.getStringPref("mail.minimizeToTray.supportedDesktops");
 
     // couldn't detect the desktop environment
     if (!desktopEnvironment) {
@@ -37,7 +50,7 @@ function getTrayService() {
 }
 
 function moveToTray(window) {
-    const {service, error} = getTrayService();
+    const { service, error } = getTrayService();
 
     // check if system supports tray
     if (error) {
@@ -53,11 +66,12 @@ function moveToTray(window) {
         return;
 
     // if mail.minimizeToTray is enabled, let it handle the hiding
-    if (Services.prefs.getBoolPref("mail.minimizeToTray", false))
+    if (preferences.getBoolPref("mail.minimizeToTray", false))
         return;
 
     const baseWindow = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
-    Cc["@mozilla.org/messenger/osintegration;1"].getService(service).hideWindow(baseWindow);
+    const resolvedService = Cc["@mozilla.org/messenger/osintegration;1"].getService(service);
+    (resolvedService.hideWindow ?? resolvedService.HideWindow)(baseWindow);
 }
 
 function registerWindow(context, windowId) {
@@ -91,34 +105,23 @@ function registerWindow(context, windowId) {
     });
 }
 
-class CloseToTray extends ExtensionCommon.ExtensionAPIPersistent {
-    PERSISTENT_EVENTS = {
-        onFail: ({ fire }) => {
-            const listener = async (_, error) => {
-                await fire.wakeup?.();
-                fire.async(error);
-            };
-
-            emitter.on("closeToTray-fail", listener);
-            return {
-                unregister: () => { emitter.off("closeToTray-fail", listener); },
-                convert: newFire => { fire = newFire; },
-            };
-        }
-    };
-
+class CloseToTray extends ExtensionCommon.ExtensionAPI {
     getAPI(context) {
-        const onFail = new ExtensionCommon.EventManager({
+        const onFailParams = {
             context,
-            module: "closeToTray",
-            event: "onFail",
-            extensionApi: this
-        }).api();
+            name: "closeToTray.event",
+            register: fire => {
+                const listener = (_, ...params) => { fire.async(...params); };
+
+                emitter.on("closeToTray-fail", listener);
+                return () => { emitter.off("closeToTray-fail", listener); };
+            }
+        };
 
         return {
             closeToTray: {
                 registerWindow: registerWindow.bind(null, context),
-                onFail
+                onFail: new ExtensionCommon.EventManager(onFailParams).api()
             }
         };
     }

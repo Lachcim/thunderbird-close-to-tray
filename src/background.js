@@ -9,10 +9,12 @@ function handleFailure(error) {
     const getDiagnostic = () => {
         if (error.code == "noBetterbird")
             return "Thunderbird on Linux lacks tray support. Consider using Betterbird instead.";
+        if (error.code == "oldBetterbird")
+            return "This version of Betterbird is not supported. Please update Betterbird to version 102.15.1 or newer.";
         if (error.code == "noDesktopEnvironment")
-            return "Couldn't identify your desktop environment.";
+            return "Couldn't detect your desktop environment.";
         if (error.code == "unsupportedDesktopEnvironment")
-            return `Your desktop environment ("${error.desktopEnvironment}") is unsupported. Try adjusting mail.minimizeToTray.supportedDesktops.`;
+            return `Your desktop environment ("${error.desktopEnvironment}") is not supported. Try adjusting mail.minimizeToTray.supportedDesktops.`;
 
         return "";
     }
@@ -28,9 +30,7 @@ function handleFailure(error) {
     );
 }
 
-// make sure addListener is called before first await to ensure it registers for non-persistent background page
 messenger.windows.onCreated.addListener(handleWindow);
 messenger.closeToTray.onFail.addListener(handleFailure);
 
-const openWindows = await messenger.windows.getAll();
-openWindows.forEach(handleWindow);
+messenger.windows.getAll().then(openWindows => openWindows.forEach(handleWindow));
