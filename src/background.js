@@ -6,7 +6,7 @@ function handleWindow(window) {
 }
 
 function handleFailure(error) {
-    function getDiagnostic() {
+    const getDiagnostic = () => {
         if (error.code == "noBetterbird")
             return "Thunderbird on Linux lacks tray support. Consider using Betterbird instead.";
         if (error.code == "noDesktopEnvironment")
@@ -14,7 +14,7 @@ function handleFailure(error) {
         if (error.code == "unsupportedDesktopEnvironment")
             return `Your desktop environment ("${error.desktopEnvironment}") is unsupported. Try adjusting mail.minimizeToTray.supportedDesktops.`;
 
-        return null;
+        return "";
     }
 
     messenger.notifications.create(

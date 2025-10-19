@@ -20,23 +20,23 @@ function getTrayService() {
     const desktopEnvironment = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo).desktopEnvironment;
     const supportedDesktops = Services.prefs.getStringPref("mail.minimizeToTray.supportedDesktops");
 
-    // Betterbird escape hatch for when desktop detection fails
-    if (!desktopEnvironment && supportedDesktops.includes("no-DE"))
-        return { service: Ci.nsIMessengerUnixIntegration, error: null };
-
     // couldn't detect the desktop environment
-    if (!desktopEnvironment)
+    if (!desktopEnvironment) {
+        // Betterbird escape hatch for when desktop detection fails
+        if (supportedDesktops.includes("no-DE"))
+            return { service: Ci.nsIMessengerUnixIntegration, error: null };
+
         return { service: null, error: { code: "noDesktopEnvironment" } };
+    }
 
     // substring not present in supportedDesktops - this is how Betterbird implements this check
-    if (!supportedDesktops.includes(desktopEnvironment)) {
+    if (!supportedDesktops.includes(desktopEnvironment))
         return { service: null, error: { code: "unsupportedDesktopEnvironment", desktopEnvironment } };
-    }
 
     return { service: Ci.nsIMessengerUnixIntegration, error: null };
 }
 
-function moveToTray(window, baseWindow) {
+function moveToTray(window) {
     const {service, error} = getTrayService();
 
     // check if system supports tray
@@ -56,6 +56,7 @@ function moveToTray(window, baseWindow) {
     if (Services.prefs.getBoolPref("mail.minimizeToTray", false))
         return;
 
+    const baseWindow = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
     Cc["@mozilla.org/messenger/osintegration;1"].getService(service).hideWindow(baseWindow);
 }
 
@@ -64,20 +65,18 @@ function registerWindow(context, windowId) {
         return;
 
     const window = context.extension.windowManager.get(windowId, context).window;
-    const baseWindow = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
     const closeWindow = window.close;
 
     function handleClose(event) {
         // only hide Thunderbird when there are no other main windows
         if (restorers.size > 1) {
             restorers.delete(windowId);
-
             closeWindow();
             return;
         }
 
         event?.preventDefault();
-        moveToTray(window, baseWindow);
+        moveToTray(window);
     }
 
     // handle close from taskbar
