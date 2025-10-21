@@ -5,7 +5,7 @@
     "description": "X moves Thunderbird to the tray, _ minimizes it. Just like Discord.",
     "author": "Lachcim",
     "homepage_url": "https://github.com/Lachcim/thunderbird-close-to-tray",
-    "version": "1.1",
+    "version": "1.2",
     "browser_specific_settings": {
         "gecko": {
             "id": "@close-to-tray.lachcim",
@@ -32,8 +32,5 @@
                 "script": "closeToTray.js"
             }
         }
-    },
-    "permissions": [
-        "notifications"
-    ]
+    }
 }

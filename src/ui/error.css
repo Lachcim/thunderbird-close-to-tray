@@ -38,6 +38,9 @@ code {
 button, .button {
     color: #0C0C0D;
     background-color: #E6E6E6;
+
+    font-size: inherit;
+    font-family: inherit;
     text-decoration: none;
 
     display: inline-block;
