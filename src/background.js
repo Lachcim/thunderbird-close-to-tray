@@ -36,8 +36,7 @@ async function handleFailure(error) {
         type: "popup",
         url: `ui/error.html?${new URLSearchParams(error)}`,
         width: 440,
-        height: 540,
-        allowScriptsToClose: true // required in old Thunderbird versions
+        height: 540
     });
 
     errorWindowId = newWindow.id;
