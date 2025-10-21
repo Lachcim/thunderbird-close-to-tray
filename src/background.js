@@ -5,29 +5,43 @@ function handleWindow(window) {
     }
 }
 
-function handleFailure(error) {
-    const getDiagnostic = () => {
-        if (error.code == "noBetterbird")
-            return "Thunderbird on Linux lacks tray support. Consider using Betterbird instead.";
-        if (error.code == "oldBetterbird")
-            return "This version of Betterbird is not supported. Please update Betterbird to version 102.15.1 or newer.";
-        if (error.code == "noDesktopEnvironment")
-            return "Couldn't detect your desktop environment.";
-        if (error.code == "unsupportedDesktopEnvironment")
-            return `Your desktop environment ("${error.desktopEnvironment}") is not supported. Try adjusting mail.minimizeToTray.supportedDesktops.`;
+let errorWindowId = null;
+let errorWindowParams = null;
 
-        return "";
+async function getErrorWindow(error) {
+    if (errorWindowId == null)
+        return { window: null, valid: false };
+
+    try {
+        const window = await browser.windows.get(errorWindowId);
+        return { window, valid: JSON.stringify(error) == errorWindowParams };
+    }
+    catch {
+        return { window: null, valid: false };
+    }
+}
+
+async function handleFailure(error) {
+    const { window, valid } = await getErrorWindow(error);
+
+    if (window && valid) {
+        browser.windows.update(window.id, { focused: true });
+        return;
     }
 
-    messenger.notifications.create(
-        "closeToTrayFailed",
-        {
-            title: "Couldn't move Thunderbird to the tray",
-            message: getDiagnostic(),
-            type: "basic",
-            iconUrl: "img/256.png"
-        }
-    );
+    if (window)
+        await browser.windows.remove(window.id);
+
+    const newWindow = await browser.windows.create({
+        type: "popup",
+        url: `ui/error.html?${new URLSearchParams(error)}`,
+        width: 440,
+        height: 540,
+        allowScriptsToClose: true // required in old Thunderbird versions
+    });
+
+    errorWindowId = newWindow.id;
+    errorWindowParams = JSON.stringify(error);
 }
 
 messenger.windows.onCreated.addListener(handleWindow);

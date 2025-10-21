@@ -1,0 +1,52 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Adjusted", "Segoe UI", "Liberation Sans", sans-serif;
+    font-size: 75%;
+
+    background-color: #F8F9FA;
+    color: #6E6E6E;
+
+    margin: 1rem;
+}
+
+a {
+    color: #0B57d0;
+}
+
+code {
+    background-color: #FFFFFF;
+    padding: 0.25em;
+    border: 1px solid #C3C7CB;
+    border-radius: 2px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+
+    margin-bottom: 1rem;
+}
+.logo img {
+    width: 4rem;
+}
+.logo h1 {
+    font-size: 2em;
+    font-weight: 500;
+
+    margin: 0 0 0 1rem;
+}
+
+button, .button {
+    color: #0C0C0D;
+    background-color: #E6E6E6;
+    text-decoration: none;
+
+    display: inline-block;
+    border: none;
+    border-radius: 2px;
+    padding: 8px 20px;
+
+    cursor: pointer;
+}
+button:hover, .button:hover {
+    background-color: #CECECF;
+}

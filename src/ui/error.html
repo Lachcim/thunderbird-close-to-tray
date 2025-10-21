@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Couldn't move Thunderbird to the tray - Close to Tray</title>
+
+        <link rel="stylesheet" href="error.css">
+        <script src="error.js"></script>
+    </head>
+    <body>
+        <div class="logo">
+            <img src="../img/256-transparent.png" alt="Close to Tray">
+            <h1>Couldn't move Thunderbird to the tray</h1>
+        </div>
+        <section class="noBetterbird" hidden>
+            <p>
+                Thunderbird on Linux lacks tray support. Consider using <a href="https://betterbird.eu">Betterbird</a> instead.
+            </p>
+            <p>
+                Betterbird is a fork of Thunderbird that, among other features, adds tray support for Linux clients.
+                Betterbird on Linux is confirmed to work with:
+            </p>
+            <ul>
+                <li>KDE</li>
+                <li>Gnome
+                <li>Pop Gnome</li>
+                <li>Mate</li>
+                <li>XFCE</li>
+            </ul>
+            <p>
+                Close to Tray works with Betterbird 102.15.1 or newer.
+            </p>
+            <p>
+                <a href="https://betterbird.eu" class="button">Get Betterbird</a>
+                <button class="close">Close</button>
+            </p>
+        </section>
+        <section class="oldBetterbird" hidden>
+            <p>
+                This version of Betterbird is not supported. Please upgrade to Betterbird version 102.15.1 or newer.
+            </p>
+            <p>
+                Support for system tray on Linux was introduced in Betterbird 102.15.1. This is Betterbird <span id="version"></span>.
+            </p>
+            <p>
+                <a href="https://betterbird.eu" class="button">Get Betterbird</a>
+                <button class="close">Close</button>
+            </p>
+        </section>
+        <section class="noDesktopEnvironment unsupportedDesktopEnvironment" hidden>
+            <p class="unsupportedDesktopEnvironment" hidden>
+                Your desktop environment is not supported.
+            </p>
+            <p class="noDesktopEnvironment" hidden>
+                Close to Tray couldn't detect your desktop environment. This should not normally happen.
+            </p>
+            <p>
+                When moving a window to the tray, Betterbird checks your desktop environment against a list of supported environments.
+                If your environment is not listed, the operation is aborted.
+            </p>
+            <p>
+                If you wish to override this check, add the value
+                <code class="unsupportedDesktopEnvironment" id="desktopEnvironment" hidden></code>
+                <code class="noDesktopEnvironment" hidden>no-DE</code>
+                to the following setting: <code>mail.minimizeToTray.supportedDesktops</code>
+            </p>
+            <p>
+                Betterbird on Linux is confirmed to work with:
+            </p>
+            <ul>
+                <li>KDE</li>
+                <li>Gnome
+                <li>Pop Gnome</li>
+                <li>Mate</li>
+                <li>XFCE</li>
+            </ul>
+            <p>
+                <strong>Warning:</strong> Overriding this check may cause your window to become hidden with no way to restore it.
+            </p>
+            <p>
+                <button class="close">Close</button>
+            </p>
+        </section>
+    </body>
+</html>

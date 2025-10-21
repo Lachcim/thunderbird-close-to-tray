@@ -24,7 +24,7 @@ function getTrayService() {
     // this is Linux, check if tray is supported through Betterbird
     if (!Ci.nsIMessengerUnixIntegration) {
         if (AppConstants.MOZ_APP_DISPLAYNAME_DO_NOT_USE == "Betterbird")
-            return { service: null, error: { code: "oldBetterbird" } };
+            return { service: null, error: { code: "oldBetterbird", version: AppConstants.MOZ_APP_VERSION } };
 
         return { service: null, error: { code: "noBetterbird" } };
     }
