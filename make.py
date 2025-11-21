@@ -1,10 +1,13 @@
+import json
 import os
+import re
 import shutil
 
 root = os.path.dirname(os.path.realpath(__file__))
 dist = os.path.join(root, "dist")
 src = os.path.join(root, "src")
 license = os.path.join(root, "LICENSE")
+manifest = os.path.join(dist, "manifest.json")
 
 betterbird_block_files = [
     os.path.join(dist, "closeToTray.js"),
@@ -12,7 +15,17 @@ betterbird_block_files = [
 ]
 
 def get_archive_name(betterbird_enabled):
-    archive_name = "close-to-tray"
+    archive_name = "close-to-tray-"
+
+    with open(manifest) as file:
+        manifest_data = json.load(file)
+        archive_name += manifest_data["version"]
+
+        if "strict_max_version" in manifest_data["browser_specific_settings"]["gecko"]:
+            max_version = manifest_data["browser_specific_settings"]["gecko"]["strict_max_version"]
+            max_version = max_version.replace(".*", "")
+
+            archive_name += f"-tb{max_version}"
 
     if betterbird_enabled:
         archive_name += "-betterbird"
@@ -40,6 +53,24 @@ def remove_betterbird_blocks(path, betterbird_enabled):
     with open(path, "w") as file:
         file.write(source)
 
+def remove_max_version():
+    with open(manifest) as file:
+        manifest_data = json.load(file)
+
+    del manifest_data["browser_specific_settings"]["gecko"]["strict_max_version"]
+
+    with open(manifest, "w") as file:
+        json.dump(manifest_data, file, indent=4)
+
+def ensure_no_betterbird():
+    for root, dirs, files in os.walk(dist):
+        for path in files:
+            if path.endswith(".png"):
+                continue
+
+            with open(os.path.join(root, path)) as file:
+                assert not re.search("betterbird", file.read(), re.IGNORECASE)
+
 for betterbird_enabled in [False, True]:
     shutil.rmtree(dist, ignore_errors=True)
     shutil.copytree(src, dist)
@@ -47,6 +78,11 @@ for betterbird_enabled in [False, True]:
 
     for file in betterbird_block_files:
         remove_betterbird_blocks(file, betterbird_enabled)
+
+    if betterbird_enabled:
+        remove_max_version()
+    else:
+        ensure_no_betterbird()
 
     archive_name = get_archive_name(betterbird_enabled)
 
