@@ -24,7 +24,7 @@ function getTrayService() {
     /* beginNoBetterbird */
     // this is Linux, no tray support
     if (AppConstants.platform == "linux")
-        return { service: null, error: "linuxUnsupported" };
+        return { service: null, error: { code: "linuxUnsupported" } };
     /* endNoBetterbird */
 
     /* beginBetterbird */

@@ -11,12 +11,16 @@ body {
 a {
     color: #0B57d0;
 }
-
 code {
     background-color: #FFFFFF;
     padding: 0.25em;
     border: 1px solid #C3C7CB;
     border-radius: 2px;
+}
+blockquote {
+    margin-left: 0.5rem;
+    padding: 0.25rem 0 0.25rem 1rem;
+    border-left: 3px solid #CECECF;
 }
 
 .logo {
