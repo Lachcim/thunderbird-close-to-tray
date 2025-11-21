@@ -53,6 +53,16 @@ def remove_betterbird_blocks(path, betterbird_enabled):
     with open(path, "w") as file:
         file.write(source)
 
+def amend_extension_name():
+    with open(manifest) as file:
+        manifest_data = json.load(file)
+
+    manifest_data["name"] += " (for Windows)"
+    manifest_data["short_name"] += " (for Windows)"
+
+    with open(manifest, "w") as file:
+        json.dump(manifest_data, file, indent=4)
+
 def remove_max_version():
     with open(manifest) as file:
         manifest_data = json.load(file)
@@ -82,6 +92,7 @@ for betterbird_enabled in [False, True]:
     if betterbird_enabled:
         remove_max_version()
     else:
+        amend_extension_name()
         ensure_no_betterbird()
 
     archive_name = get_archive_name(betterbird_enabled)
