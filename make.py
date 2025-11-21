@@ -58,7 +58,6 @@ def amend_extension_name():
         manifest_data = json.load(file)
 
     manifest_data["name"] += " (for Windows)"
-    manifest_data["short_name"] += " (for Windows)"
 
     with open(manifest, "w") as file:
         json.dump(manifest_data, file, indent=4)
