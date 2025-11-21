@@ -11,9 +11,30 @@
             <img src="../img/256-transparent.png" alt="Close to Tray">
             <h1>Couldn't move Thunderbird to the tray</h1>
         </div>
+        <!-- beginNoBetterbird -->
+        <section class="linuxUnsupported" hidden>
+            <p>
+                Close to Tray couldn't move your window to the tray because Thunderbird on Linux lacks tray support.
+            </p>
+            <p>
+                Close to Tray only works if the following option is available in settings:
+            </p>
+            <blockquote>
+                When Thunderbird is minimized, move it to the tray
+            </blockquote>
+            <p>
+                This option is not available in Linux clients, so Close To Tray can't use it.
+            </p>
+            <p>
+                <button class="close">Close</button>
+            </p>
+        </section>
+        <!-- endNoBetterbird -->
+        <!-- beginBetterbird -->
         <section class="noBetterbird" hidden>
             <p>
-                Thunderbird on Linux lacks tray support. Consider using <a href="https://betterbird.eu">Betterbird</a> instead.
+                You are using a Betterbird-enabled version of Close to Tray with vanilla Thunderbird.
+                You must download <a href="https://betterbird.eu">Betterbird</a>.
             </p>
             <p>
                 Betterbird is a fork of Thunderbird that, among other features, adds tray support for Linux clients.
@@ -80,5 +101,6 @@
                 <button class="close">Close</button>
             </p>
         </section>
+        <!-- endBetterbird -->
     </body>
 </html>

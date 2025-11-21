@@ -21,6 +21,13 @@ function getTrayService() {
     if (AppConstants.platform == "win")
         return { service: Ci.nsIMessengerWindowsIntegration, error: null };
 
+    /* beginNoBetterbird */
+    // this is Linux, no tray support
+    if (AppConstants.platform == "linux")
+        return { service: null, error: "linuxUnsupported" };
+    /* endNoBetterbird */
+
+    /* beginBetterbird */
     // this is Linux, check if tray is supported through Betterbird
     if (!Ci.nsIMessengerUnixIntegration) {
         if (AppConstants.MOZ_APP_DISPLAYNAME_DO_NOT_USE == "Betterbird")
@@ -47,6 +54,7 @@ function getTrayService() {
         return { service: null, error: { code: "unsupportedDesktopEnvironment", desktopEnvironment } };
 
     return { service: Ci.nsIMessengerUnixIntegration, error: null };
+    /* endBetterbird */
 }
 
 function moveToTray(window) {
