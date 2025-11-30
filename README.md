@@ -13,17 +13,13 @@ Close to Tray works with Linux when combined with [Betterbird](https://www.bette
 
 ## Close to Tray vs alternatives
 
-#### How is this different from "When Thunderbird is minimized, move it to the tray"?
-
-Enabling this option doesn't let you choose between moving to tray and minimizing. Close to Tray retains the minimize functionality and gives you a separate way to move the window to the tray.
-
-With this option enabled, it's still possible to accidentally quit Thunderbird. With Close to Tray, you explicitly have to click "Exit".
-
-When this setting is on, clicking the "Show desktop" button will cause Thunderbird to move to the tray even when it's out of focus. Close to Tray will only move your window to the tray when you close it.
-
-#### How is this different from [Minimize on Close](https://github.com/rsjtdrjgfuzkfg/thunderbird-minimizeonclose)?
-
-Minimize on Close makes the close button behave like the minimize button. In Close to Tray, the buttons have separate uses.
+|   | `_` button / `Win+D` | `X` button |
+| - | -------------------- | ---------- |
+| Vanilla Thunderbird | Minimize | Quit
+| When Thunderbird is minimized, move it to the tray | Move to tray | Quit
+| [Minimize on Close](https://github.com/rsjtdrjgfuzkfg/thunderbird-minimizeonclose) | Minimize | Minimize |
+| [Minimize on Close](https://github.com/rsjtdrjgfuzkfg/thunderbird-minimizeonclose) +  When Thunderbird is minimized, move it to the tray | Move to tray | Move to tray |
+| **Close to Tray** | Minimize | Move to tray |
 
 ## Close to Tray and Linux
 
