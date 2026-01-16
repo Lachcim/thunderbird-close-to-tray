@@ -20,7 +20,13 @@
                 "type": "function",
                 "description": "Restore saved windows.",
                 "async": false,
-                "parameters": []
+                "parameters": [
+                    {
+                        "name": "parentWindowId",
+                        "type": "integer",
+                        "description": "ID of the parent window."
+                    }
+                ]
             }
         ]
     }

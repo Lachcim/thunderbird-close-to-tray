@@ -1,3 +1,5 @@
+let parentWindowId = null;
+
 async function handleStartup() {
     const windows = await browser.windows.getAll();
 
@@ -12,6 +14,16 @@ async function handleStartup() {
     }
 
     messenger.closeToTray.moveToTray(windows[0].id);
+    parentWindowId = windows[0].id;
+}
+
+async function handleRestore(windowId) {
+    if (windowId != parentWindowId)
+        return;
+
+    messenger.startInTray.restoreWindows(parentWindowId);
+    browser.windows.onFocusChanged.removeListener(handleRestore);
 }
 
 browser.runtime.onStartup.addListener(handleStartup);
+browser.windows.onFocusChanged.addListener(handleRestore);
