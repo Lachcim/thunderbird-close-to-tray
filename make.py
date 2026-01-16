@@ -81,8 +81,30 @@ def ensure_no_betterbird():
             with open(os.path.join(root, path)) as file:
                 assert not re.search("betterbird", file.read(), re.IGNORECASE)
 
+manifest_version = None
+manifest_strict_min_version = None
+manifest_strict_max_version = None
+
+def check_manifest_coherence(src):
+    manifest = os.path.join(src, "manifest.json")
+    with open(manifest) as file:
+        manifest_data = json.load(file)
+
+    global manifest_version, manifest_strict_min_version, manifest_strict_max_version
+
+    if manifest_version is None:
+        manifest_version = manifest_data["version"]
+        manifest_strict_min_version = manifest_data["browser_specific_settings"]["gecko"]["strict_min_version"]
+        manifest_strict_max_version = manifest_data["browser_specific_settings"]["gecko"]["strict_max_version"]
+
+    assert manifest_version == manifest_data["version"]
+    assert manifest_strict_min_version == manifest_data["browser_specific_settings"]["gecko"]["strict_min_version"]
+    assert manifest_strict_max_version == manifest_data["browser_specific_settings"]["gecko"]["strict_max_version"]
+
 for extension in ["closeToTray", "startInTray"]:
     extension_src = os.path.join(src, extension)
+
+    check_manifest_coherence(extension_src)
 
     for betterbird_enabled in [False, True]:
         shutil.rmtree(dist, ignore_errors=True)
