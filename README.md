@@ -1,4 +1,4 @@
-![Close to Tray](src/img/128.png)
+![Close to Tray](src/closeToTray/img/128.png)
 
 # Close to Tray
 
