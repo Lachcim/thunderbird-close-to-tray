@@ -31,6 +31,14 @@
                 "paths": [["closeToTray"]],
                 "script": "closeToTray.js"
             }
+        },
+        "startInTray": {
+            "schema": "startInTray.json",
+            "parent": {
+                "scopes": ["addon_parent"],
+                "paths": [["startInTray"]],
+                "script": "startInTray.js"
+            }
         }
     }
 }

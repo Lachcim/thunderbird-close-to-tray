@@ -1,0 +1,27 @@
+[
+    {
+        "namespace": "startInTray",
+        "functions": [
+            {
+                "name": "saveWindow",
+                "type": "function",
+                "description": "Save the state of a window to be restored later.",
+                "async": true,
+                "parameters": [
+                    {
+                        "name": "windowId",
+                        "type": "integer",
+                        "description": "ID of the window."
+                    }
+                ]
+            },
+            {
+                "name": "restoreWindows",
+                "type": "function",
+                "description": "Restore saved windows.",
+                "async": false,
+                "parameters": []
+            }
+        ]
+    }
+]
