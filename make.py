@@ -81,7 +81,7 @@ def ensure_no_betterbird():
             with open(os.path.join(root, path)) as file:
                 assert not re.search("betterbird", file.read(), re.IGNORECASE)
 
-for extension in ["closeToTray"]:
+for extension in ["closeToTray", "startInTray"]:
     extension_src = os.path.join(src, extension)
 
     for betterbird_enabled in [False, True]:

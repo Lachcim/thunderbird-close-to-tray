@@ -6,12 +6,25 @@
                 "name": "registerWindow",
                 "type": "function",
                 "description": "Causes the given window to be moved to the tray when it is closed.",
-                "async": true,
+                "async": false,
                 "parameters": [
                     {
                         "name": "windowId",
                         "type": "integer",
-                        "description": "ID of the affected window."
+                        "description": "ID of the window."
+                    }
+                ]
+            },
+            {
+                "name": "moveToTray",
+                "type": "function",
+                "description": "Move the given window to the tray immediately.",
+                "async": false,
+                "parameters": [
+                    {
+                        "name": "windowId",
+                        "type": "integer",
+                        "description": "ID of the window."
                     }
                 ]
             }
@@ -20,7 +33,7 @@
             {
                 "name": "onFail",
                 "type": "function",
-                "description": "Called when Close to Tray fails because there is no tray.",
+                "description": "Called when Close to Tray fails.",
                 "parameters": [
                     {
                         "name": "error",
@@ -37,11 +50,6 @@
                     "code": {
                         "type": "string",
                         "description": "Error code"
-                    },
-                    "desktopEnvironment": {
-                        "type": "string",
-                        "optional": true,
-                        "description": "The detected desktop environment"
                     }
                 }
             }

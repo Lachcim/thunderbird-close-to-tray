@@ -83,6 +83,11 @@ this.closeToTray = (() => {
         (resolvedService.hideWindow ?? resolvedService.HideWindow)(baseWindow);
     }
 
+    function moveToTrayById(context, windowId) {
+        const window = context.extension.windowManager.get(windowId, context).window;
+        moveToTray(window);
+    }
+
     function registerWindow(context, windowId) {
         if (restorers.has(windowId))
             return;
@@ -130,6 +135,7 @@ this.closeToTray = (() => {
             return {
                 closeToTray: {
                     registerWindow: registerWindow.bind(null, context),
+                    moveToTray: moveToTrayById.bind(null, context),
                     onFail: new ExtensionCommon.EventManager(onFailParams).api()
                 }
             };

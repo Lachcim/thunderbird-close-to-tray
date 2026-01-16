@@ -1,16 +1,16 @@
 {
     "manifest_version": 2,
-    "name": "Close to Tray",
-    "short_name": "Close to Tray",
-    "description": "X moves Thunderbird to the tray, _ minimizes it. Just like Discord.",
+    "name": "Start in Tray",
+    "short_name": "Start in Tray",
+    "description": "When Thunderbird is launched, move it to the tray.",
     "author": "Lachcim",
     "homepage_url": "https://github.com/Lachcim/thunderbird-close-to-tray",
     "version": "1.5",
     "browser_specific_settings": {
         "gecko": {
-            "id": "@close-to-tray.lachcim",
+            "id": "@start-in-tray.lachcim",
             "strict_min_version": "76.0",
-            "strict_max_version": "146.*"
+            "strict_max_version": "149.*"
         }
     },
     "icons": {
