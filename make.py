@@ -14,6 +14,9 @@ betterbird_block_files = [
     os.path.join(dist, "closeToTray.js"),
     os.path.join(dist, "ui/error.html")
 ]
+extension_name_substitution_files = [
+    os.path.join(dist, "ui/error.html")
+]
 
 def get_archive_name(prefix, betterbird_enabled):
     archive_name = f"{prefix}-"
@@ -101,6 +104,20 @@ def check_manifest_coherence(src):
     assert manifest_strict_min_version == manifest_data["browser_specific_settings"]["gecko"]["strict_min_version"]
     assert manifest_strict_max_version == manifest_data["browser_specific_settings"]["gecko"]["strict_max_version"]
 
+def substitute_extension_name(path, extension):
+    with open(path) as file:
+        source = file.read()
+
+    names = {
+        "closeToTray": "Close to Tray",
+        "startInTray": "Start in Tray"
+    }
+
+    source = source.replace("$extensionName", names[extension])
+
+    with open(path, "w") as file:
+        file.write(source)
+
 for extension in ["closeToTray", "startInTray"]:
     extension_src = os.path.join(src, extension)
 
@@ -114,6 +131,9 @@ for extension in ["closeToTray", "startInTray"]:
 
         for file in betterbird_block_files:
             remove_betterbird_blocks(file, betterbird_enabled)
+
+        for file in extension_name_substitution_files:
+            substitute_extension_name(file, extension)
 
         if betterbird_enabled:
             remove_max_version()
