@@ -38,9 +38,7 @@ this.startInTray = (() => {
         const realStoreWindows = SessionStoreManager.store.data.windows ?? [];
         const realStoreHiddenWindows = SessionStoreManager.store.data.startInTrayHiddenWindows ?? [];
 
-        if (realStoreHiddenWindows)
-            fakeStateObject.startInTrayHiddenWindows = realStoreHiddenWindows;
-
+        fakeStateObject.startInTrayHiddenWindows = realStoreHiddenWindows;
         for (let i = 1; i < realStoreWindows.length; i++)
             fakeStateObject.windows.push(realStoreWindows[i]);
 
