@@ -3,28 +3,62 @@ this.startInTray = (() => {
         try { return ChromeUtils.importESModule("resource://gre/modules/ExtensionCommon.sys.mjs"); }
         catch { return ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm"); }
     })();
-    const { SessionStoreManager } = (() => {
-        try { return ChromeUtils.importESModule("resource://gre/modules/SessionStoreManager.sys.mjs"); }
-        catch { return ChromeUtils.import("resource://gre/modules/SessionStoreManager.jsm"); }
-    })();
 
-    const savedWindows = [];
+    let originalCreateStateObject = null;
 
-    function saveWindow(context, windowId) {
-        const window = context.extension.windowManager.get(windowId).window;
+    function createFakeStateObject(...args) {
+        const stateObject = originalCreateStateObject(...args);
+        stateObject.startInTrayHiddenWindows = [];
 
-        if (window && window.document.readyState == "complete" || window.getWindowStateForSessionPersistence)
-            savedWindows.push(window.getWindowStateForSessionPersistence());
+        stateObject.windows.push = function(value) {
+            // only permit one window in the vanilla list of windows
+            if (this.length == 0) {
+                Array.prototype.push.call(this, value);
+                return;
+            }
+
+            // if the list is full, add to list of hidden windows
+            stateObject.startInTrayHiddenWindows.push(value);
+        };
+
+        return stateObject;
     }
 
-    function restoreWindows(context, parentWindowId) {
-        if (!SessionStoreManager._initialState)
-            SessionStoreManager._initialState = SessionStoreManager._createStateObject();
+    async function hijackSessionStoreManager(context) {
+        const { SessionStoreManager } = context.extension.windowManager.getAll().next().value.window;
 
-        SessionStoreManager._initialState.windows.push(...savedWindows);
-        savedWindows.splice(0);
+        // create a fake state object that only remembers up to one window and hides away the rest
+        originalCreateStateObject = SessionStoreManager._createStateObject;
+        SessionStoreManager._createStateObject = createFakeStateObject;
 
-        const parentWindow = context.extension.windowManager.get(parentWindowId).window;
+        // install and populate fake state object
+        const fakeStateObject = SessionStoreManager._createStateObject();
+
+        await SessionStoreManager.store.load();
+        const realStoreWindows = SessionStoreManager.store.data.windows;
+        const realStoreHiddenWindows = SessionStoreManager.store.data.startInTrayHiddenWindows;
+
+        if (realStoreHiddenWindows)
+            fakeStateObject.startInTrayHiddenWindows = realStoreHiddenWindows;
+
+        for (let i = 1; i < realStoreWindows.length; i++)
+            fakeStateObject.windows.push(realStoreWindows[i]);
+
+        SessionStoreManager.store.data = fakeStateObject;
+    }
+
+    function restoreHiddenWindows(context, parentWindowId) {
+        const { SessionStoreManager } = context.extension.windowManager.getAll().next().value.window;
+
+        if (SessionStoreManager.store.data.startInTrayHiddenWindows.length == 0)
+            return;
+
+        // create a fake initial state
+        SessionStoreManager._initialState = SessionStoreManager.store.data;
+        SessionStoreManager._initialState.windows = SessionStoreManager._initialState.startInTrayHiddenWindows;
+
+        // open hidden windows based on the fake initial state
+        const parentWindow = context.extension.windowManager.get(parentWindowId, context).window;
         SessionStoreManager._openOtherRequiredWindows(parentWindow);
     }
 
@@ -32,8 +66,8 @@ this.startInTray = (() => {
         getAPI(context) {
             return {
                 startInTray: {
-                    saveWindow: saveWindow.bind(null, context),
-                    restoreWindows: restoreWindows.bind(null, context)
+                    hijackSessionStoreManager: hijackSessionStoreManager.bind(null, context),
+                    restoreHiddenWindows: restoreHiddenWindows.bind(null, context)
                 }
             };
         }

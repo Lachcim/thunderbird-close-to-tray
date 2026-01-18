@@ -3,22 +3,16 @@
         "namespace": "startInTray",
         "functions": [
             {
-                "name": "saveWindow",
+                "name": "hijackSessionStoreManager",
                 "type": "function",
-                "description": "Save the state of a window to be restored later.",
+                "description": "Alter the SessionStoreManager so as to prevent Thunderbird from opening multiple windows at startup.",
                 "async": true,
-                "parameters": [
-                    {
-                        "name": "windowId",
-                        "type": "integer",
-                        "description": "ID of the window."
-                    }
-                ]
+                "parameters": []
             },
             {
-                "name": "restoreWindows",
+                "name": "restoreHiddenWindows",
                 "type": "function",
-                "description": "Restore saved windows.",
+                "description": "Restore the windows that were prevented from opening at startup.",
                 "async": false,
                 "parameters": [
                     {
