@@ -6,7 +6,6 @@ import shutil
 root = os.path.dirname(os.path.realpath(__file__))
 dist = os.path.join(root, "dist")
 src = os.path.join(root, "src")
-common = os.path.join(src, "common")
 license = os.path.join(root, "LICENSE")
 manifest = os.path.join(dist, "manifest.json")
 
@@ -14,12 +13,9 @@ betterbird_block_files = [
     os.path.join(dist, "closeToTray.js"),
     os.path.join(dist, "ui/error.html")
 ]
-extension_name_substitution_files = [
-    os.path.join(dist, "ui/error.html")
-]
 
-def get_archive_name(prefix, betterbird_enabled):
-    archive_name = f"{prefix}-"
+def get_archive_name(betterbird_enabled):
+    archive_name = "closeToTray-"
 
     with open(manifest) as file:
         manifest_data = json.load(file)
@@ -84,66 +80,23 @@ def ensure_no_betterbird():
             with open(os.path.join(root, path)) as file:
                 assert not re.search("betterbird", file.read(), re.IGNORECASE)
 
-manifest_version = None
-manifest_strict_min_version = None
-manifest_strict_max_version = None
+for betterbird_enabled in [False, True]:
+    shutil.rmtree(dist, ignore_errors=True)
+    shutil.copytree(src, dist)
+    shutil.copy(license, dist)
 
-def check_manifest_coherence(src):
-    manifest = os.path.join(src, "manifest.json")
-    with open(manifest) as file:
-        manifest_data = json.load(file)
+    for file in betterbird_block_files:
+        remove_betterbird_blocks(file, betterbird_enabled)
 
-    global manifest_version, manifest_strict_min_version, manifest_strict_max_version
+    if betterbird_enabled:
+        remove_max_version()
+    else:
+        amend_extension_name()
+        ensure_no_betterbird()
 
-    if manifest_version is None:
-        manifest_version = manifest_data["version"]
-        manifest_strict_min_version = manifest_data["browser_specific_settings"]["gecko"]["strict_min_version"]
-        manifest_strict_max_version = manifest_data["browser_specific_settings"]["gecko"]["strict_max_version"]
+    archive_name = get_archive_name(betterbird_enabled)
 
-    assert manifest_version == manifest_data["version"]
-    assert manifest_strict_min_version == manifest_data["browser_specific_settings"]["gecko"]["strict_min_version"]
-    assert manifest_strict_max_version == manifest_data["browser_specific_settings"]["gecko"]["strict_max_version"]
-
-def substitute_extension_name(path, extension):
-    with open(path) as file:
-        source = file.read()
-
-    names = {
-        "closeToTray": "Close to Tray",
-        "startInTray": "Start in Tray"
-    }
-
-    source = source.replace("$extensionName", names[extension])
-
-    with open(path, "w") as file:
-        file.write(source)
-
-for extension in ["closeToTray", "startInTray"]:
-    extension_src = os.path.join(src, extension)
-
-    check_manifest_coherence(extension_src)
-
-    for betterbird_enabled in [False, True]:
-        shutil.rmtree(dist, ignore_errors=True)
-        shutil.copytree(extension_src, dist)
-        shutil.copytree(common, dist, dirs_exist_ok=True)
-        shutil.copy(license, dist)
-
-        for file in betterbird_block_files:
-            remove_betterbird_blocks(file, betterbird_enabled)
-
-        for file in extension_name_substitution_files:
-            substitute_extension_name(file, extension)
-
-        if betterbird_enabled:
-            remove_max_version()
-        else:
-            amend_extension_name()
-            ensure_no_betterbird()
-
-        archive_name = get_archive_name(extension, betterbird_enabled)
-
-        archive_name_zip = shutil.make_archive(archive_name, "zip", dist)
-        os.rename(archive_name_zip, archive_name)
+    archive_name_zip = shutil.make_archive(archive_name, "zip", dist)
+    os.rename(archive_name_zip, archive_name)
 
 shutil.rmtree(dist)

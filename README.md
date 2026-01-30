@@ -29,14 +29,6 @@ If you wish to use Close to Tray with Betterbird, you must download a Betterbird
 
 Close to Tray is confirmed to work with KDE, Gnome, Pop Gnome, Mate and XFCE. If you believe your desktop environment is supported, adjust `mail.minimizeToTray.supportedDesktops`. If your desktop environment is not being detected, add `no-DE` to the list of environments configured in the setting.
 
-## Start in Tray
-
-![Close to Tray](src/startInTray/img/128.png)
-
-Close to Tray comes with a sister extension, Start in Tray. Start in Tray moves the main window to the tray when Thunderbird is launched.
-
-Start in Tray on Linux is subject to the same caveats and limitations as Close to Tray. If you wish to use Start in Tray with Betterbird, you must download a Betterbird-enabled version of Start in Tray from the [releases tab](https://github.com/Lachcim/thunderbird-close-to-tray/releases).
-
 ## Build instructions
 
 Run `make.py`. This will generate several .xpi files. The ones whose name ends with `betterbird` support Betterbird, the other ones don't.

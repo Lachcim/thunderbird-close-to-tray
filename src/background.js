@@ -1,5 +1,12 @@
 let parentWindowId = null;
 
+function handleWindow(window) {
+    // only handle main windows
+    if (window.type == "normal") {
+        messenger.closeToTray.registerWindow(window.id);
+    }
+}
+
 async function handleStartup() {
     const windows = await browser.windows.getAll();
 
@@ -7,7 +14,7 @@ async function handleStartup() {
     if (windows.some(window => window.type != "normal"))
         return;
 
-    // Start in Tray is installed but Thunderbird started with multiple windows open.
+    // Start in tray is enabled but Thunderbird started with multiple windows open.
     // This should not normally happen unless the session file has been tampered with
     for (let i = 1; i < windows.length; i++) {
         browser.windows.remove(windows[i].id);
@@ -27,6 +34,9 @@ async function handleRestore(windowId) {
 
     browser.windows.onFocusChanged.removeListener(handleRestore);
 }
+
+messenger.windows.onCreated.addListener(handleWindow);
+messenger.windows.getAll().then(openWindows => openWindows.forEach(handleWindow));
 
 browser.runtime.onStartup.addListener(handleStartup);
 browser.windows.onFocusChanged.addListener(handleRestore);
