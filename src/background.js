@@ -8,6 +8,14 @@ function handleWindow(window) {
 }
 
 async function handleStartup() {
+    // check if start in tray is enabled
+    const storage = await browser.storage.local.get("options");
+    if (!storage.options?.startInTray)
+        return;
+
+    // prevent multiple windows from being opened next time Thunderbird launches
+    messenger.startInTray.hijackSessionStoreManager();
+
     const windows = await browser.windows.getAll();
 
     // there is a popup that the user should see, abort
@@ -23,6 +31,9 @@ async function handleStartup() {
     // hide the main window
     messenger.closeToTray.moveToTray(windows[0].id);
     parentWindowId = windows[0].id;
+
+    // restore the main window when the tray icon is clicked
+    browser.windows.onFocusChanged.addListener(handleRestore);
 }
 
 async function handleRestore(windowId) {
@@ -39,7 +50,3 @@ messenger.windows.onCreated.addListener(handleWindow);
 messenger.windows.getAll().then(openWindows => openWindows.forEach(handleWindow));
 
 browser.runtime.onStartup.addListener(handleStartup);
-browser.windows.onFocusChanged.addListener(handleRestore);
-
-// prevent multiple windows from being opened next time Thunderbird launches
-messenger.startInTray.hijackSessionStoreManager();
