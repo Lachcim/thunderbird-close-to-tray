@@ -28,7 +28,8 @@ this.startInTray = (() => {
         const { SessionStoreManager } = context.extension.windowManager.getAll().next().value.window;
 
         // create a fake state object that only remembers up to one window and hides away the rest
-        originalCreateStateObject = SessionStoreManager._createStateObject;
+        if (originalCreateStateObject == null)
+            originalCreateStateObject = SessionStoreManager._createStateObject;
         SessionStoreManager._createStateObject = createFakeStateObject;
 
         // install and populate fake state object
@@ -43,6 +44,13 @@ this.startInTray = (() => {
             fakeStateObject.windows.push(realStoreWindows[i]);
 
         SessionStoreManager.store.data = fakeStateObject;
+    }
+
+    function restoreSessionStoreManager(context) {
+        const { SessionStoreManager } = context.extension.windowManager.getAll().next().value.window;
+
+        // restore the original implementation of _createStateObject
+        SessionStoreManager._createStateObject = originalCreateStateObject;
     }
 
     function restoreHiddenWindows(context, parentWindowId) {
@@ -65,6 +73,7 @@ this.startInTray = (() => {
             return {
                 startInTray: {
                     hijackSessionStoreManager: hijackSessionStoreManager.bind(null, context),
+                    restoreSessionStoreManager: restoreSessionStoreManager.bind(null, context),
                     restoreHiddenWindows: restoreHiddenWindows.bind(null, context)
                 }
             };

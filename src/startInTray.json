@@ -10,6 +10,13 @@
                 "parameters": []
             },
             {
+                "name": "restoreSessionStoreManager",
+                "type": "function",
+                "description": "Undo the effects of hijackSessionStoreManager",
+                "async": false,
+                "parameters": []
+            },
+            {
                 "name": "restoreHiddenWindows",
                 "type": "function",
                 "description": "Restore the windows that were prevented from opening at startup.",
