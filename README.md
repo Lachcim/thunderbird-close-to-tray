@@ -1,4 +1,4 @@
-![Close to Tray](src/closeToTray/img/128.png)
+![Close to Tray](src/img/128.png)
 
 # [Close to Tray](https://addons.thunderbird.net/thunderbird/addon/close-to-tray/)
 
