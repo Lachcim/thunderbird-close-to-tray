@@ -46,17 +46,7 @@ function handleRestore(windowId) {
     browser.windows.onFocusChanged.removeListener(handleRestore);
 }
 
-function handleStorage(changes) {
-    const startInTray = changes.options?.newValue?.startInTray;
-    if (startInTray == null)
-        return;
-
-    if (startInTray) messenger.startInTray.hijackSessionStoreManager();
-    else messenger.startInTray.restoreSessionStoreManager();
-}
-
 messenger.windows.onCreated.addListener(handleWindow);
 messenger.windows.getAll().then(openWindows => openWindows.forEach(handleWindow));
 
 browser.runtime.onStartup.addListener(handleStartup);
-browser.storage.local.onChanged.addListener(handleStorage);
