@@ -30,20 +30,8 @@ this.startInTray = (() => {
         // create a fake state object that only remembers up to one window and hides away the rest
         if (originalCreateStateObject == null)
             originalCreateStateObject = SessionStoreManager._createStateObject;
+
         SessionStoreManager._createStateObject = createFakeStateObject;
-
-        // install and populate fake state object
-        const fakeStateObject = SessionStoreManager._createStateObject();
-
-        await SessionStoreManager.store.load();
-        const realStoreWindows = SessionStoreManager.store.data.windows ?? [];
-        const realStoreHiddenWindows = SessionStoreManager.store.data.startInTrayHiddenWindows ?? [];
-
-        fakeStateObject.startInTrayHiddenWindows = realStoreHiddenWindows;
-        for (let i = 1; i < realStoreWindows.length; i++)
-            fakeStateObject.windows.push(realStoreWindows[i]);
-
-        SessionStoreManager.store.data = fakeStateObject;
     }
 
     function restoreSessionStoreManager(context) {
