@@ -44,12 +44,13 @@ this.startInTray = (() => {
     function restoreHiddenWindows(context, parentWindowId) {
         const { SessionStoreManager } = context.extension.windowManager.getAll().next().value.window;
 
-        if (SessionStoreManager.store.data.startInTrayHiddenWindows.length == 0)
+        const hiddenWindows = SessionStoreManager.store.data.startInTrayHiddenWindows;
+        if (!hiddenWindows || hiddenWindows.length == 0)
             return;
 
         // create a fake initial state
         SessionStoreManager._initialState = SessionStoreManager.store.data;
-        SessionStoreManager._initialState.windows = SessionStoreManager._initialState.startInTrayHiddenWindows;
+        SessionStoreManager._initialState.windows = hiddenWindows;
 
         // open hidden windows based on the fake initial state
         const parentWindow = context.extension.windowManager.get(parentWindowId, context).window;
