@@ -6,8 +6,8 @@ A Thunderbird extension that moves the main window to the tray when you close it
 
 * Prevents you from accidentally quitting Thunderbird
 * `X` moves the window to the tray, `_` minimizes it – just like Discord
-* Doesn't hide your window when you press "Show desktop"
 * Choose "Exit" from the hamburger menu or use a keyboard shortcut to quit
+* Optional: Move to tray on startup
 
 Close to Tray works with Linux when combined with [Betterbird](https://www.betterbird.eu/). If you wish to use Close to Tray with Betterbird, **you must download a Betterbird-enabled version of Close to Tray** from the [releases tab](https://github.com/Lachcim/thunderbird-close-to-tray/releases).
 
@@ -31,6 +31,6 @@ Close to Tray is confirmed to work with KDE, Gnome, Pop Gnome, Mate and XFCE. If
 
 ## Build instructions
 
-Run `make.py`. This will generate several .xpi files. The ones whose name ends with `betterbird` support Betterbird, the other ones don't.
+Run `make.py`. This will generate two .xpi files. The one whose name ends with `betterbird` supports Betterbird, the other one doesn't.
 
 To install an addon in Thunderbird, go to `Add-ons and Themes > Cog > Install Add-on From File...` and choose one of the generated .xpi files.
