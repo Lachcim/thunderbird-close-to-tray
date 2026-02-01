@@ -7,7 +7,7 @@ A Thunderbird extension that moves the main window to the tray when you close it
 * Prevents you from accidentally quitting Thunderbird
 * `X` moves the window to the tray, `_` minimizes it – just like Discord
 * Choose "Exit" from the hamburger menu or use a keyboard shortcut to quit
-* Optional: Move to tray on startup
+* Optional: Start in tray
 
 Close to Tray works with Linux when combined with [Betterbird](https://www.betterbird.eu/). If you wish to use Close to Tray with Betterbird, **you must download a Betterbird-enabled version of Close to Tray** from the [releases tab](https://github.com/Lachcim/thunderbird-close-to-tray/releases).
 
