@@ -14,4 +14,24 @@ window.addEventListener("load", async () => {
         if (options.startInTray) messenger.startInTray.hijackSessionStoreManager();
         else messenger.startInTray.restoreSessionStoreManager();
     });
+
+    // macOS-specific options
+    const platformInfo = await browser.runtime.getPlatformInfo();
+    if (platformInfo.os === "mac") {
+        document.getElementById("mac-options").hidden = false;
+
+        const minimizeRadio = document.getElementById("mac-minimize");
+        const hideRadio = document.getElementById("mac-hide");
+
+        if (options.macCloseBehavior === "hide") hideRadio.checked = true;
+        else minimizeRadio.checked = true;
+
+        const handleRadioChange = async () => {
+            options.macCloseBehavior = hideRadio.checked ? "hide" : "minimize";
+            await browser.storage.local.set({ options });
+        };
+
+        minimizeRadio.addEventListener("change", handleRadioChange);
+        hideRadio.addEventListener("change", handleRadioChange);
+    }
 });
