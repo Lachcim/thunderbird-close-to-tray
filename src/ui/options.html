@@ -9,5 +9,17 @@
     <body>
         <input type="checkbox" id="start-in-tray">
         <label for="start-in-tray">When Thunderbird is launched, move it to the tray</label>
+
+        <div id="mac-options" hidden>
+            <p><strong>When closing Thunderbird on macOS:</strong></p>
+            <div>
+                <input type="radio" name="mac-close-behavior" id="mac-minimize" value="minimize">
+                <label for="mac-minimize">Minimize to Dock</label>
+            </div>
+            <div>
+                <input type="radio" name="mac-close-behavior" id="mac-hide" value="hide">
+                <label for="mac-hide">Hide window (click Dock icon to restore)</label>
+            </div>
+        </div>
     </body>
 </html>
