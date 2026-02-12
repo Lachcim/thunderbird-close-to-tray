@@ -15,6 +15,32 @@ this.closeToTray = (() => {
 
     let macCloseBehavior = "minimize"; // "hide" or "minimize"
 
+    // call [NSApp hide:nil] via Objective-C runtime to use the native macOS
+    // app hiding mechanism; Dock click triggers applicationShouldHandleReopen
+    // which Gecko handles automatically to restore windows
+    function hideAppNatively() {
+        const { ctypes } = (() => {
+            try { return ChromeUtils.importESModule("resource://gre/modules/ctypes.sys.mjs"); }
+            catch { return ChromeUtils.import("resource://gre/modules/ctypes.jsm"); }
+        })();
+
+        const objc = ctypes.open("/usr/lib/libobjc.A.dylib");
+        try {
+            const id = ctypes.voidptr_t;
+            const SEL = ctypes.voidptr_t;
+            // objc_msgSend needs separate declarations per signature
+            const objc_msgSend = objc.declare("objc_msgSend", ctypes.default_abi, id, id, SEL);
+            const objc_msgSend_id = objc.declare("objc_msgSend", ctypes.default_abi, ctypes.void_t, id, SEL, id);
+            const sel_registerName = objc.declare("sel_registerName", ctypes.default_abi, SEL, ctypes.char.ptr);
+            const objc_getClass = objc.declare("objc_getClass", ctypes.default_abi, id, ctypes.char.ptr);
+
+            const NSApp = objc_msgSend(objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
+            objc_msgSend_id(NSApp, sel_registerName("hide:"), id(0));
+        } finally {
+            objc.close();
+        }
+    }
+
     function getTrayService() {
         // no tray on Mac or other systems
         if (AppConstants.platform != "win" && AppConstants.platform != "linux")
@@ -64,8 +90,12 @@ this.closeToTray = (() => {
         // macOS: hide or minimize based on user preference
         if (AppConstants.platform == "macosx") {
             if (macCloseBehavior === "hide") {
-                const baseWindow = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
-                baseWindow.visibility = false;
+                try {
+                    hideAppNatively();
+                } catch (e) {
+                    // fallback to minimize if native hide fails
+                    window.minimize();
+                }
                 emitter.emit("closeToTray-macHidden");
             } else {
                 window.minimize();
@@ -103,20 +133,9 @@ this.closeToTray = (() => {
     }
 
     function restoreHiddenMacWindows() {
-        if (AppConstants.platform != "macosx") return;
-
-        const wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-            .getService(Ci.nsIWindowMediator);
-        const enumerator = wm.getEnumerator("mail:3pane");
-
-        while (enumerator.hasMoreElements()) {
-            const win = enumerator.getNext();
-            const baseWindow = win.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
-            if (!baseWindow.visibility) {
-                baseWindow.visibility = true;
-                win.focus();
-            }
-        }
+        // with NSApp.hide(), Gecko's applicationShouldHandleReopen handler
+        // restores windows automatically on Dock click; this is kept as a
+        // no-op for API compatibility
     }
 
     function setMacCloseBehavior(behavior) {
