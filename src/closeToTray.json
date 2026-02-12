@@ -27,6 +27,26 @@
                         "description": "ID of the window."
                     }
                 ]
+            },
+            {
+                "name": "restoreHiddenMacWindows",
+                "type": "function",
+                "description": "Restore all hidden macOS windows.",
+                "async": false,
+                "parameters": []
+            },
+            {
+                "name": "setMacCloseBehavior",
+                "type": "function",
+                "description": "Set the macOS close behavior.",
+                "async": false,
+                "parameters": [
+                    {
+                        "name": "behavior",
+                        "type": "string",
+                        "description": "The close behavior: 'hide' or 'minimize'."
+                    }
+                ]
             }
         ],
         "events": [
@@ -40,6 +60,12 @@
                         "$ref": "closeToTray.Error"
                     }
                 ]
+            },
+            {
+                "name": "onMacHidden",
+                "type": "function",
+                "description": "Called when a window is hidden on macOS.",
+                "parameters": []
             }
         ],
         "types": [
