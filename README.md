@@ -8,6 +8,7 @@ A Thunderbird extension that moves the main window to the tray when you close it
 * `X` moves the window to the tray, `_` minimizes it – just like Discord
 * Choose "Exit" from the hamburger menu or use a keyboard shortcut to quit
 * Optional: Start in tray
+* macOS support: hide the app or minimize to Dock when closing
 
 Close to Tray works with Linux when combined with [Betterbird](https://www.betterbird.eu/). If you wish to use Close to Tray with Betterbird, **you must download a Betterbird-enabled version of Close to Tray** from the [releases tab](https://github.com/Lachcim/thunderbird-close-to-tray/releases).
 
@@ -20,6 +21,15 @@ Close to Tray works with Linux when combined with [Betterbird](https://www.bette
 | [Minimize on Close](https://github.com/rsjtdrjgfuzkfg/thunderbird-minimizeonclose) | Minimize | Minimize |
 | [Minimize on Close](https://github.com/rsjtdrjgfuzkfg/thunderbird-minimizeonclose) +  When Thunderbird is minimized, move it to the tray | Move to tray | Move to tray |
 | **Close to Tray** | Minimize | Move to tray |
+
+## Close to Tray and macOS
+
+Since macOS does not have a system tray, Close to Tray offers two alternative behaviors when closing the window, configurable in the extension options:
+
+* **Minimize to Dock** (default): The window minimizes to the Dock, just like pressing `_`. Click the Dock thumbnail to restore.
+* **Hide window**: The app is hidden using the native macOS hiding mechanism (same as `Cmd+H`). Click the Dock icon to restore instantly. The window position and size are preserved.
+
+When multiple windows are open, closing a window will close it normally. The hide/minimize behavior only applies to the last remaining window.
 
 ## Close to Tray and Linux
 

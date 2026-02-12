@@ -1,214 +1,240 @@
-# macOS対応: 調査結果・実装計画・タスク
+# macOS Support: Investigation, Implementation Plan & Tasks
 
-## 1. 概要
+## 1. Overview
 
-Close to Tray拡張機能にmacOSサポートを追加する。macOSにはシステムトレイがないため、代わりに「ウィンドウ非表示（Dockアイコンクリックで復元）」または「Dock最小化」の2つの動作をオプションで選択可能にする。
+Add macOS support to the Close to Tray extension. Since macOS does not have a system tray, two alternative behaviors are offered as user-configurable options: "Hide window (restore by clicking Dock icon)" or "Minimize to Dock".
 
-**スコープ**: 閉じるボタンの挙動のみ（「起動時にトレイに格納」機能のMac対応はスコープ外）
+**Scope**: Close button behavior only ("Start in tray" feature for Mac is out of scope)
 
 ---
 
-## 2. 調査結果
+## 2. Investigation Results
 
-### 2.1 プロジェクト構成
+### 2.1 Project Structure
 
 ```
 src/
-├── manifest.json          # 拡張機能マニフェスト (Manifest V2)
-├── background.js          # バックグラウンドスクリプト（ウィンドウ管理の統括）
-├── errorHandler.js        # エラーダイアログ管理
-├── closeToTray.js         # コア機能（Experiment API, 特権コード）
-├── closeToTray.json       # closeToTray APIスキーマ定義
-├── startInTray.js         # 起動時トレイ格納（Experiment API）
-├── startInTray.json       # startInTray APIスキーマ定義
+├── manifest.json          # Extension manifest (Manifest V2)
+├── background.js          # Background script (window management orchestrator)
+├── errorHandler.js        # Error dialog management
+├── closeToTray.js         # Core functionality (Experiment API, privileged code)
+├── closeToTray.json       # closeToTray API schema definition
+├── startInTray.js         # Start in tray feature (Experiment API)
+├── startInTray.json       # startInTray API schema definition
 ├── ui/
-│   ├── options.html       # 設定画面
-│   ├── options.js         # 設定画面ロジック
-│   ├── options.css        # 設定画面スタイル
-│   ├── error.html         # エラーダイアログ
-│   ├── error.js           # エラーダイアログロジック
-│   └── error.css          # エラーダイアログスタイル
-└── img/                   # アイコン画像
-make.py                    # ビルドスクリプト（2つの.xpiを生成）
+│   ├── options.html       # Settings page
+│   ├── options.js         # Settings page logic
+│   ├── options.css        # Settings page styles
+│   ├── error.html         # Error dialog
+│   ├── error.js           # Error dialog logic
+│   └── error.css          # Error dialog styles
+└── img/                   # Icon images
+make.py                    # Build script (generates two .xpi files)
 ```
 
-### 2.2 アーキテクチャ
+### 2.2 Architecture
 
-拡張機能は**Thunderbird Experiment APIs**（特権拡張API）を使用。2つのカスタムAPIがある:
+The extension uses **Thunderbird Experiment APIs** (privileged extension APIs). Two custom APIs exist:
 
 1. **closeToTray API** (`closeToTray.js` / `closeToTray.json`)
-   - `registerWindow(windowId)`: ウィンドウの閉じるイベントを傍受し、トレイに移動
-   - `moveToTray(windowId)`: ウィンドウを即座にトレイに移動
-   - `onFail` イベント: トレイ操作失敗時に発火
+   - `registerWindow(windowId)`: Intercepts window close event and moves to tray
+   - `moveToTray(windowId)`: Immediately moves window to tray
+   - `onFail` event: Fires when tray operation fails
 
 2. **startInTray API** (`startInTray.js` / `startInTray.json`)
-   - `hijackSessionStoreManager()`: セッション復元を制御
-   - `restoreSessionStoreManager()`: 元のセッション管理に戻す
-   - `restoreHiddenWindows(parentWindowId)`: 非表示ウィンドウを復元
+   - `hijackSessionStoreManager()`: Controls session restoration
+   - `restoreSessionStoreManager()`: Restores original session management
+   - `restoreHiddenWindows(parentWindowId)`: Restores hidden windows
 
-### 2.3 現在のプラットフォーム対応状況
+### 2.3 Current Platform Support
 
-| プラットフォーム | トレイ対応 | 使用サービス | 備考 |
+| Platform | Tray Support | Service Used | Notes |
 |---|---|---|---|
-| Windows | ○ ネイティブ | `nsIMessengerWindowsIntegration` | Thunderbird 76+ |
-| Linux (Betterbird) | △ 条件付き | `nsIMessengerUnixIntegration` | Betterbird 102.15.1+, 特定DE |
-| Linux (通常TB) | × | なし | エラーダイアログを表示 |
-| **macOS** | **× 未対応** | **なし** | **`window.minimize()` のみ実行** |
+| Windows | Native | `nsIMessengerWindowsIntegration` | Thunderbird 76+ |
+| Linux (Betterbird) | Conditional | `nsIMessengerUnixIntegration` | Betterbird 102.15.1+, specific DEs |
+| Linux (vanilla TB) | No | None | Shows error dialog |
+| **macOS** | **Not supported** | **None** | **Only `window.minimize()` is called** |
 
-### 2.4 プラットフォーム検出方法
+### 2.4 Platform Detection
 
 - `AppConstants.platform`: `"win"` / `"linux"` / `"macosx"`
-- Experiment APIの特権コード内でのみ利用可能
+- Only available within Experiment API privileged code
 
-### 2.5 コアロジックの詳細フロー
+### 2.5 Core Logic Flow
 
-#### `closeToTray.js` の処理フロー
+#### `closeToTray.js` Processing Flow
 
 ```
 registerWindow(windowId)
-  ├── window.addEventListener("close", handleClose)  // タスクバーからの閉じる
-  └── window.close = handleClose                       // Xボタンからの閉じる
+  ├── window.addEventListener("close", handleClose)  // close from taskbar
+  └── window.close = handleClose                       // close from X button
 
 handleClose(event)
-  ├── restorers.size > 1 → 通常のclose（他にメインウィンドウがある）
+  ├── restorers.size > 1 → normal close (other main windows exist)
   └── restorers.size == 1 → event.preventDefault() + moveToTray(window)
 
 moveToTray(window)
+  ├── macOS → hideAppNatively() or window.minimize()
   ├── getTrayService() → { service, error }
-  ├── error あり → emitter.emit("closeToTray-fail", error)
-  ├── window.minimize()  ← 全プラットフォーム共通
-  ├── service なし → return（macOSはここで終了、最小化のみ）
-  ├── mail.minimizeToTray が有効 → return（TB本体の処理に任せる）
-  └── nsIBaseWindow + osintegration サービスで非表示化
+  ├── error exists → emitter.emit("closeToTray-fail", error)
+  ├── window.minimize()  ← common to Windows/Linux
+  ├── no service → return (minimize only)
+  ├── mail.minimizeToTray enabled → return (delegate to TB itself)
+  └── hide via nsIBaseWindow + osintegration service
 ```
 
-#### `getTrayService()` の分岐
+### 2.6 Build System
 
-```javascript
-// closeToTray.js:16-59
-function getTrayService() {
-    // macOS: service=null, error=null → moveToTray()でminimize()のみ実行
-    if (AppConstants.platform != "win" && AppConstants.platform != "linux")
-        return { service: null, error: null };
+`make.py` generates two `.xpi` files:
+- **Standard version**: `closeToTray-1.6-tb149-(for Windows).xpi` — Betterbird code removed
+- **Betterbird version**: `closeToTray-1.6-betterbird.xpi` — with Linux support
 
-    // Windows: ネイティブトレイサポート
-    if (AppConstants.platform == "win")
-        return { service: Ci.nsIMessengerWindowsIntegration, error: null };
+Conditional block markers:
+- `/* beginBetterbird */` ... `/* endBetterbird */` — Betterbird-only code
+- `/* beginNoBetterbird */` ... `/* endNoBetterbird */` — Standard TB-only code
 
-    // Linux: Betterbird判定（条件付きビルドブロック使用）
-    // ... (省略)
-}
-```
+### 2.7 Settings Management
 
-### 2.6 ビルドシステム
+- WebExtension side: stores `options` object via `browser.storage.local`
+  - Current: `{ startInTray: boolean }`
+  - After macOS addition: `{ startInTray: boolean, macCloseBehavior: "hide" | "minimize" }`
+- Experiment API side: reads Thunderbird settings via `Cc["@mozilla.org/preferences-service;1"]`
+- No direct bridge between the two stores (`startInTray` is reflected via API function calls)
 
-`make.py` が2つの`.xpi`を生成:
-- **通常版**: `closeToTray-1.6-tb149-(for Windows).xpi` — Betterbirdコードを除去
-- **Betterbird版**: `closeToTray-1.6-betterbird.xpi` — Linuxサポート付き
+### 2.8 macOS Native APIs
 
-条件付きブロックのマーカー:
-- `/* beginBetterbird */` ... `/* endBetterbird */` — Betterbird専用コード
-- `/* beginNoBetterbird */` ... `/* endNoBetterbird */` — 通常TB専用コード
+Window hiding on macOS uses `[NSApp hide:nil]` via the Objective-C runtime. This is the same hiding mechanism that native macOS apps use with `Cmd+H`.
 
-### 2.7 設定管理
+**Technologies used:**
+- **js-ctypes** (`resource://gre/modules/ctypes.sys.mjs`): Gecko's FFI mechanism for calling native C/Objective-C functions from JavaScript
+- **libobjc.A.dylib**: Objective-C runtime library
+  - `objc_getClass("NSApplication")`: Gets the NSApplication class
+  - `sel_registerName("sharedApplication")` / `sel_registerName("hide:")`: Registers selectors
+  - `objc_msgSend(class, selector, ...)`: Sends messages (Objective-C method calls)
 
-- WebExtension側: `browser.storage.local` で `options` オブジェクトを保存
-  - 現在: `{ startInTray: boolean }`
-- Experiment API側: `Cc["@mozilla.org/preferences-service;1"]` で Thunderbird設定を読み込み
-- 2つの設定ストアの間に直接的な橋渡しはない（`startInTray` は API関数呼び出しで反映）
-
-### 2.8 macOSで利用可能なXPCOM API
-
-- `nsIBaseWindow.visibility`: ウィンドウの表示/非表示を制御
-  - `visibility = false` → ウィンドウ完全非表示
-  - `visibility = true` → ウィンドウ再表示
-- `nsIWindowMediator`: ウィンドウの列挙が可能
-  - `getEnumerator("mail:3pane")` でメインウィンドウを取得
-- macOSのDockクリック時: Geckoの `ReOpen()` が呼ばれる
-  - 可視ウィンドウがなければ新規ウィンドウを開こうとする
-  - 最小化ウィンドウがあれば `deminiaturize` を呼ぶ
+**Restore mechanism:**
+- When the Dock icon is clicked, Gecko's `applicationShouldHandleReopen` handler automatically restores windows
+- No restore logic needed in the extension (delegated to Gecko's built-in functionality)
 
 ---
 
-## 3. 設計判断
+## 3. Design Decisions
 
-### 3.1 「非表示」モードの実装方式
+### 3.1 "Hide" Mode Implementation
 
-**選択: `nsIBaseWindow.visibility = false` + WebExtensionレベルの復元検知**
+**Final choice: `[NSApp hide:nil]` — Native macOS hiding via Objective-C runtime**
 
-理由:
-- `nsIBaseWindow.visibility` はXPCOMの標準APIで信頼性が高い
-- Experiment APIの特権コード内でアクセス可能
-- Windows版の `HideWindow` に最も近い動作
+Approaches considered and reasons for rejection:
 
-### 3.2 復元トリガーの検知方法
+| Approach | Result | Problem |
+|---|---|---|
+| `nsIBaseWindow.visibility = false` | Rejected | On Dock click, Gecko's `ReOpen()` opens a new window with opening animation |
+| `setPosition(-32000, -32000)` (off-screen) | Rejected | Window visible on large screens. Dock click doesn't restore on first attempt; requires clicking another app first |
+| **`[NSApp hide:nil]`** | **Adopted** | Same behavior as native macOS "Hide App". Instant restore on Dock click. No animation |
 
-**選択: `windows.onFocusChanged` + `windows.onCreated` の併用**
+**Rationale:**
+- Reproduces the same `Cmd+H` behavior as native macOS apps
+- Gecko's `applicationShouldHandleReopen` automatically restores windows
+- No animation on restore (instant display)
+- Window position and size are preserved
 
-理由:
-- Dockクリック時、Geckoが既存ウィンドウにフォーカスを移すか新規ウィンドウを開く
-- `onFocusChanged`: フォーカス変更を検知（主要パス）
-- `onCreated`: Geckoが新規ウィンドウを開いた場合のフォールバック
-- 両方を組み合わせることで確実に復元できる
+### 3.2 Restore Trigger Detection
 
-### 3.3 設定値の受け渡し
+**Final choice: Delegate to Gecko's automatic restoration (extension-side restore logic kept as safety net)**
 
-**選択: `setMacCloseBehavior()` API関数でWebExtension → Experiment APIに設定を渡す**
+When using `NSApp.hide()`, Gecko's built-in `applicationShouldHandleReopen` handler automatically restores windows on Dock click. Therefore `restoreHiddenMacWindows()` is maintained as a no-op (empty function), and the restore listeners in `background.js` are kept as a safety net.
 
-理由:
-- 既存パターン（`startInTray` も API関数呼び出しで状態を変更）に合致
-- `browser.storage.local` と `nsIPrefService` の橋渡しが不要
+### 3.3 Preference Bridging
 
-### 3.4 デフォルト動作
+**Choice: `setMacCloseBehavior()` API function to pass settings from WebExtension → Experiment API**
 
-**選択: `"minimize"`（Dock最小化）をデフォルト**
+Rationale:
+- Matches existing pattern (`startInTray` also changes state via API function calls)
+- No need to bridge `browser.storage.local` and `nsIPrefService`
 
-理由:
-- 最小化は安全で、ウィンドウが「見えなくなって復元不能」になるリスクがない
-- 「非表示」はユーザーが明示的に選択した場合のみ有効化
+### 3.4 Default Behavior
 
-### 3.5 ビルドシステムへの影響
+**Choice: `"minimize"` (Dock minimize) as default**
 
-**選択: 変更なし**
+Rationale:
+- Minimize is safe with no risk of windows becoming invisible and unrecoverable
+- "Hide" is only enabled when explicitly selected by the user
 
-理由:
-- macOSコードはランタイムの `AppConstants.platform == "macosx"` チェックで分岐
-- 条件付きビルドブロックは不要
+### 3.5 Build System Impact
+
+**Choice: No changes**
+
+Rationale:
+- macOS code branches at runtime via `AppConstants.platform == "macosx"` check
+- No conditional build blocks needed
 
 ---
 
-## 4. 実装計画
+## 4. Implementation Plan
 
-### 4.1 変更対象ファイル一覧
+### 4.1 Files to Modify
 
-| ファイル | 変更内容 |
+| File | Changes |
 |---|---|
-| `src/closeToTray.js` | macOS非表示/最小化ロジック、復元関数、設定セッター、新イベント |
-| `src/closeToTray.json` | 新API関数・イベントのスキーマ定義 |
-| `src/background.js` | macOS復元検知、設定同期、storageリスナー |
-| `src/ui/options.html` | macOS動作選択のラジオボタンUI |
-| `src/ui/options.js` | プラットフォーム検知、ラジオボタン状態管理 |
-| `src/ui/options.css` | ラジオボタンのスタイル |
+| `src/closeToTray.js` | macOS hide/minimize logic, NSApp.hide() via ctypes, settings setter, new event |
+| `src/closeToTray.json` | Schema definitions for new API functions and event |
+| `src/background.js` | macOS settings sync, storage listener, restore listeners (safety net) |
+| `src/ui/options.html` | Radio button UI for macOS behavior selection |
+| `src/ui/options.js` | Platform detection, radio button state management |
+| `src/ui/options.css` | Styles for radio buttons |
 
-### 4.2 各ファイルの詳細変更内容
+### 4.2 Detailed Changes per File
 
 #### 4.2.1 `src/closeToTray.js`
 
-**a) 変数追加** — `restorers`, `emitter` 宣言の後に:
+**a) Add variable** — after `restorers`, `emitter` declarations:
 
 ```javascript
 let macCloseBehavior = "minimize"; // "hide" or "minimize"
 ```
 
-**b) `moveToTray()` — macOS分岐を既存コードの前に追加**
+**b) Add `hideAppNatively()` function** — calls Objective-C runtime via ctypes:
+
+```javascript
+function hideAppNatively() {
+    const { ctypes } = (() => {
+        try { return ChromeUtils.importESModule("resource://gre/modules/ctypes.sys.mjs"); }
+        catch { return ChromeUtils.import("resource://gre/modules/ctypes.jsm"); }
+    })();
+
+    const objc = ctypes.open("/usr/lib/libobjc.A.dylib");
+    try {
+        const id = ctypes.voidptr_t;
+        const SEL = ctypes.voidptr_t;
+        // objc_msgSend needs separate declarations per signature
+        const objc_msgSend = objc.declare("objc_msgSend", ctypes.default_abi, id, id, SEL);
+        const objc_msgSend_id = objc.declare("objc_msgSend", ctypes.default_abi, ctypes.void_t, id, SEL, id);
+        const sel_registerName = objc.declare("sel_registerName", ctypes.default_abi, SEL, ctypes.char.ptr);
+        const objc_getClass = objc.declare("objc_getClass", ctypes.default_abi, id, ctypes.char.ptr);
+
+        const NSApp = objc_msgSend(objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
+        objc_msgSend_id(NSApp, sel_registerName("hide:"), id(0));
+    } finally {
+        objc.close();
+    }
+}
+```
+
+> **Important**: `objc_msgSend` requires separate declarations per signature. `[NSApplication sharedApplication]` has signature `(id, SEL) -> id`, while `[NSApp hide:nil]` has signature `(id, SEL, id) -> void`.
+
+**c) `moveToTray()` — add macOS branch before existing code**
 
 ```javascript
 function moveToTray(window) {
     // macOS: hide or minimize based on user preference
     if (AppConstants.platform == "macosx") {
         if (macCloseBehavior === "hide") {
-            const baseWindow = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
-            baseWindow.visibility = false;
+            try {
+                hideAppNatively();
+            } catch (e) {
+                // fallback to minimize if native hide fails
+                window.minimize();
+            }
             emitter.emit("closeToTray-macHidden");
         } else {
             window.minimize();
@@ -217,33 +243,20 @@ function moveToTray(window) {
     }
 
     // existing Windows/Linux code follows unchanged...
-    const { service, error } = getTrayService();
-    // ...
 }
 ```
 
-**c) `restoreHiddenMacWindows()` 関数追加**
+**d) Add `restoreHiddenMacWindows()` function**
 
 ```javascript
 function restoreHiddenMacWindows() {
-    if (AppConstants.platform != "macosx") return;
-
-    const wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-        .getService(Ci.nsIWindowMediator);
-    const enumerator = wm.getEnumerator("mail:3pane");
-
-    while (enumerator.hasMoreElements()) {
-        const win = enumerator.getNext();
-        const baseWindow = win.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
-        if (!baseWindow.visibility) {
-            baseWindow.visibility = true;
-            win.focus();
-        }
-    }
+    // with NSApp.hide(), Gecko's applicationShouldHandleReopen handler
+    // restores windows automatically on Dock click; this is kept as a
+    // no-op for API compatibility
 }
 ```
 
-**d) `setMacCloseBehavior()` 関数追加**
+**e) Add `setMacCloseBehavior()` function**
 
 ```javascript
 function setMacCloseBehavior(behavior) {
@@ -251,9 +264,9 @@ function setMacCloseBehavior(behavior) {
 }
 ```
 
-**e) API公開 — `getAPI()` の修正**
+**f) API exposure — modify `getAPI()`**
 
-`onMacHidden` イベントマネージャーを追加:
+Add `onMacHidden` event manager:
 
 ```javascript
 const onMacHiddenParams = {
@@ -267,7 +280,7 @@ const onMacHiddenParams = {
 };
 ```
 
-return オブジェクトに追加:
+Add to return object:
 
 ```javascript
 return {
@@ -284,7 +297,7 @@ return {
 
 #### 4.2.2 `src/closeToTray.json`
 
-`functions` 配列に追加:
+Add to `functions` array:
 
 ```json
 {
@@ -309,7 +322,7 @@ return {
 }
 ```
 
-`events` 配列に追加:
+Add to `events` array:
 
 ```json
 {
@@ -322,7 +335,7 @@ return {
 
 #### 4.2.3 `src/background.js`
 
-**a) 起動時の設定反映を追加:**
+**a) Add startup settings application:**
 
 ```javascript
 async function applyMacCloseBehavior() {
@@ -334,7 +347,7 @@ async function applyMacCloseBehavior() {
 applyMacCloseBehavior();
 ```
 
-**b) 設定変更リスナーを追加:**
+**b) Add settings change listener:**
 
 ```javascript
 browser.storage.onChanged.addListener((changes, area) => {
@@ -345,7 +358,9 @@ browser.storage.onChanged.addListener((changes, area) => {
 });
 ```
 
-**c) macOS非表示時の復元ロジックを追加:**
+**c) Add macOS hidden window restore listeners (safety net):**
+
+With `NSApp.hide()`, Gecko handles restoration automatically, so `restoreHiddenMacWindows()` is a no-op. These listeners are kept as a safety net for future compatibility:
 
 ```javascript
 let macWindowsHidden = false;
@@ -372,6 +387,7 @@ async function handleMacNewWindow(newWindow) {
     macWindowsHidden = false;
     messenger.closeToTray.restoreHiddenMacWindows();
 
+    // close the spurious window opened by Gecko's ReOpen()
     try { await browser.windows.remove(newWindow.id); }
     catch (e) { /* window may have already been closed */ }
 
@@ -382,11 +398,11 @@ async function handleMacNewWindow(newWindow) {
 
 #### 4.2.4 `src/ui/options.html`
 
-既存のcheckbox + labelの下にmacOS設定セクションを追加:
+Add macOS settings section below existing checkbox + label:
 
 ```html
-<div id="mac-options" style="display: none; margin-top: 1rem;">
-    <p style="margin-bottom: 0.5rem;"><strong>When closing Thunderbird on macOS:</strong></p>
+<div id="mac-options" hidden>
+    <p><strong>When closing Thunderbird on macOS:</strong></p>
     <div>
         <input type="radio" name="mac-close-behavior" id="mac-minimize" value="minimize">
         <label for="mac-minimize">Minimize to Dock</label>
@@ -400,14 +416,13 @@ async function handleMacNewWindow(newWindow) {
 
 #### 4.2.5 `src/ui/options.js`
 
-`load` イベントリスナー内に以下を追加:
+Add inside the `load` event listener:
 
 ```javascript
 // macOS-specific options
 const platformInfo = await browser.runtime.getPlatformInfo();
 if (platformInfo.os === "mac") {
-    const macOptionsDiv = document.getElementById("mac-options");
-    macOptionsDiv.style.display = "block";
+    document.getElementById("mac-options").hidden = false;
 
     const minimizeRadio = document.getElementById("mac-minimize");
     const hideRadio = document.getElementById("mac-hide");
@@ -427,7 +442,7 @@ if (platformInfo.os === "mac") {
 
 #### 4.2.6 `src/ui/options.css`
 
-追加:
+Add:
 
 ```css
 #mac-options {
@@ -441,66 +456,88 @@ input[type=radio], input[type=radio] + label {
 
 ---
 
-## 5. リスクと対策
+## 5. Implementation History
 
-| リスク | 影響 | 対策 |
+During development, the "Hide" mode implementation was revised three times. This section documents the process.
+
+### 5.1 Attempt 1: `nsIBaseWindow.visibility = false`
+
+Used the standard XPCOM API to hide windows. While hiding itself worked, clicking the Dock icon caused Gecko's `ReOpen()` to interpret `visibility == false` as "no windows exist" and open a new window. This resulted in a new window appearing with an expanding animation from the center of the screen.
+
+### 5.2 Attempt 2: `setPosition(-32000, -32000)` (off-screen)
+
+Moved the window off-screen to make it invisible. Two problems were identified:
+1. On large screen setups, the position (-32000, -32000) was actually visible on the monitor
+2. The first Dock click did not restore the window; it required clicking another app to shift focus, then clicking the Dock icon again
+
+### 5.3 Final Solution: `[NSApp hide:nil]` (Adopted)
+
+Directly calls the Objective-C runtime to use macOS's native app hiding mechanism. Behaves identically to `Cmd+H`, with instant restoration on Dock click. Gecko's `applicationShouldHandleReopen` handler automatically handles restoration, so no restore logic is needed in the extension.
+
+**ctypes implementation note**: `objc_msgSend` is a variadic C function, but ctypes requires separate declarations for each argument count and type combination. Separate declarations are used for `[NSApplication sharedApplication]` (2 args, returns id) and `[NSApp hide:nil]` (3 args, returns void).
+
+---
+
+## 6. Risks and Mitigations
+
+| Risk | Impact | Mitigation |
 |---|---|---|
-| `nsIBaseWindow.visibility = false` でGeckoの `ReOpen()` が新規ウィンドウを開く | ウィンドウが2つ表示される | `windows.onCreated` で新規ウィンドウを検知し、非表示ウィンドウを復元して新規ウィンドウを閉じる |
-| Dockクリック時に `onFocusChanged` が発火しない | 非表示ウィンドウが復元されない | `onCreated` をフォールバックとして併用 |
-| ウィンドウが非表示のまま復元不能 | ユーザーがThunderbirdを操作できなくなる | デフォルトは安全な「最小化」。「非表示」はユーザーが明示的に選択 |
-| 複数ウィンドウが非表示になる | 復元ロジックが複雑化 | `restoreHiddenMacWindows()` で全 `mail:3pane` ウィンドウを列挙して復元 |
-| `browser.runtime.getPlatformInfo()` がTB 76で未対応 | オプション画面でmacOS判定できない | `getPlatformInfo()` はWebExtension標準APIでTB 76+で利用可能 |
+| ctypes/libobjc unavailable | `hideAppNatively()` throws exception | try/catch fallback to `window.minimize()` |
+| Gecko's `applicationShouldHandleReopen` behavior changes | Windows not restored on Dock click | Restore listeners in `background.js` serve as safety net |
+| Window remains hidden and unrecoverable | User cannot interact with Thunderbird | Default is safe "minimize". "Hide" only enabled when explicitly selected |
+| `browser.runtime.getPlatformInfo()` unavailable on TB 76 | Cannot detect macOS on options page | `getPlatformInfo()` is a standard WebExtension API available on TB 76+ |
 
 ---
 
-## 6. タスク一覧
+## 7. Task List
 
-- [ ] **Task 1**: `src/closeToTray.js` — macOS対応コアロジック追加
-  - 変数 `macCloseBehavior` 追加
-  - `moveToTray()` にmacOS分岐追加
-  - `restoreHiddenMacWindows()` 関数追加
-  - `setMacCloseBehavior()` 関数追加
-  - `onMacHidden` イベント追加
-  - API公開（`getAPI()` 修正）
+- [x] **Task 1**: `src/closeToTray.js` — Add macOS core logic
+  - Add `macCloseBehavior` variable
+  - Add `hideAppNatively()` function (NSApp.hide() via ctypes)
+  - Add macOS branch to `moveToTray()`
+  - Add `restoreHiddenMacWindows()` function (no-op)
+  - Add `setMacCloseBehavior()` function
+  - Add `onMacHidden` event
+  - Expose API (`getAPI()` modification)
 
-- [ ] **Task 2**: `src/closeToTray.json` — スキーマ定義追加
-  - `restoreHiddenMacWindows` 関数定義
-  - `setMacCloseBehavior` 関数定義
-  - `onMacHidden` イベント定義
+- [x] **Task 2**: `src/closeToTray.json` — Add schema definitions
+  - `restoreHiddenMacWindows` function definition
+  - `setMacCloseBehavior` function definition
+  - `onMacHidden` event definition
 
-- [ ] **Task 3**: `src/background.js` — macOS復元ロジック・設定同期追加
-  - `applyMacCloseBehavior()` で起動時設定反映
-  - `storage.onChanged` リスナーで設定変更即時反映
-  - `onMacHidden` リスナーで復元検知（`onFocusChanged` + `onCreated`）
+- [x] **Task 3**: `src/background.js` — Add macOS settings sync and restore listeners
+  - `applyMacCloseBehavior()` for startup settings application
+  - `storage.onChanged` listener for immediate settings sync
+  - `onMacHidden` listener for restore detection (kept as safety net)
 
-- [ ] **Task 4**: `src/ui/options.html` — macOS設定UI追加
-  - ラジオボタン（Minimize to Dock / Hide window）
+- [x] **Task 4**: `src/ui/options.html` — Add macOS settings UI
+  - Radio buttons (Minimize to Dock / Hide window)
 
-- [ ] **Task 5**: `src/ui/options.js` — プラットフォーム検知・設定保存
-  - `browser.runtime.getPlatformInfo()` でmacOS判定
-  - ラジオボタンの状態読み込み・保存
+- [x] **Task 5**: `src/ui/options.js` — Add platform detection and settings persistence
+  - `browser.runtime.getPlatformInfo()` for macOS detection
+  - Radio button state loading and saving
 
-- [ ] **Task 6**: `src/ui/options.css` — スタイル追加
-  - ラジオボタンとmacOSセクションのスタイル
-
----
-
-## 7. 検証方法
-
-1. **macOS + 最小化モード**: 閉じるボタン → ウィンドウがDockに最小化 → Dockサムネイルクリックで復元
-2. **macOS + 非表示モード**: 閉じるボタン → ウィンドウ消滅 → Dockアイコンクリックで復元
-3. **Windows**: 既存動作が変わらないことを確認（回帰テスト）
-4. **オプション画面**: macOSでのみラジオボタンが表示されること
-5. **複数ウィンドウ**: 2つ以上ウィンドウがある場合、閉じるボタンは通常のクローズ動作をすること
-6. **設定変更の即時反映**: オプション変更後、再起動なしで動作が変わること
+- [x] **Task 6**: `src/ui/options.css` — Add styles
+  - Radio button and macOS section styles
 
 ---
 
-## 8. 変更しないファイル
+## 8. Verification
 
-| ファイル | 理由 |
+1. **macOS + Minimize mode**: Close button → window minimizes to Dock → click Dock thumbnail to restore
+2. **macOS + Hide mode**: Close button → window disappears instantly → click Dock icon to restore instantly
+3. **Windows**: Verify existing behavior is unchanged (regression test)
+4. **Options page**: Radio buttons should only appear on macOS
+5. **Multiple windows**: With 2+ windows open, close button should perform normal close
+6. **Immediate settings sync**: After changing options, behavior should change without restart
+
+---
+
+## 9. Files Not Modified
+
+| File | Reason |
 |---|---|
-| `make.py` | macOSコードはランタイムチェックで分岐。条件付きビルドブロック不要 |
-| `startInTray.js` / `startInTray.json` | 今回スコープ外 |
-| `errorHandler.js` / `ui/error.html` / `ui/error.js` | macOSではエラーを出さない |
-| `manifest.json` | API定義はスキーマJSONで行うため変更不要 |
+| `make.py` | macOS code branches at runtime check. No conditional build blocks needed |
+| `startInTray.js` / `startInTray.json` | Out of scope for this change |
+| `errorHandler.js` / `ui/error.html` / `ui/error.js` | No errors on macOS |
+| `manifest.json` | API definitions are in schema JSON files, no changes needed |
