@@ -13,6 +13,8 @@ this.closeToTray = (() => {
     const restorers = new Map();
     const emitter = new ExtensionCommon.EventEmitter();
 
+    let macCloseBehavior = "minimize"; // "hide" or "minimize"
+
     function getTrayService() {
         // no tray on Mac or other systems
         if (AppConstants.platform != "win" && AppConstants.platform != "linux")
@@ -59,6 +61,18 @@ this.closeToTray = (() => {
     }
 
     function moveToTray(window) {
+        // macOS: hide or minimize based on user preference
+        if (AppConstants.platform == "macosx") {
+            if (macCloseBehavior === "hide") {
+                const baseWindow = window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
+                baseWindow.visibility = false;
+                emitter.emit("closeToTray-macHidden");
+            } else {
+                window.minimize();
+            }
+            return;
+        }
+
         const { service, error } = getTrayService();
 
         // check if system supports tray
@@ -86,6 +100,27 @@ this.closeToTray = (() => {
     function moveToTrayById(context, windowId) {
         const window = context.extension.windowManager.get(windowId, context).window;
         moveToTray(window);
+    }
+
+    function restoreHiddenMacWindows() {
+        if (AppConstants.platform != "macosx") return;
+
+        const wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+            .getService(Ci.nsIWindowMediator);
+        const enumerator = wm.getEnumerator("mail:3pane");
+
+        while (enumerator.hasMoreElements()) {
+            const win = enumerator.getNext();
+            const baseWindow = win.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
+            if (!baseWindow.visibility) {
+                baseWindow.visibility = true;
+                win.focus();
+            }
+        }
+    }
+
+    function setMacCloseBehavior(behavior) {
+        macCloseBehavior = behavior;
     }
 
     function registerWindow(context, windowId) {
@@ -132,11 +167,24 @@ this.closeToTray = (() => {
                 }
             };
 
+            const onMacHiddenParams = {
+                context,
+                name: "closeToTray.macHiddenEvent",
+                register: fire => {
+                    const listener = () => { fire.async(); };
+                    emitter.on("closeToTray-macHidden", listener);
+                    return () => { emitter.off("closeToTray-macHidden", listener); };
+                }
+            };
+
             return {
                 closeToTray: {
                     registerWindow: registerWindow.bind(null, context),
                     moveToTray: moveToTrayById.bind(null, context),
-                    onFail: new ExtensionCommon.EventManager(onFailParams).api()
+                    restoreHiddenMacWindows,
+                    setMacCloseBehavior,
+                    onFail: new ExtensionCommon.EventManager(onFailParams).api(),
+                    onMacHidden: new ExtensionCommon.EventManager(onMacHiddenParams).api()
                 }
             };
         }
