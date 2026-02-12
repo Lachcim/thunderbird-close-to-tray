@@ -3,6 +3,14 @@ body {
     margin: 1rem 0;
 }
 
-input[type=checkbox], label {
+input[type=checkbox], input[type=checkbox] + label {
+    display: inline-block;
+}
+
+#mac-options {
+    margin-top: 1rem;
+}
+
+input[type=radio], input[type=radio] + label {
     display: inline-block;
 }
