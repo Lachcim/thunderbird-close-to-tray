@@ -1,2 +1,72 @@
 dist/
 *.xpi
+
+# macOS system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+desktop.ini
+
+# Environment
+.env
+.env.local
+.env.*.local
+#.env.development.local
+#.env.test.local
+#.env.production.local
+# etc.
+
+# Sensitive files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.secret
+credentials.json
+secrets.json
+
+# Certificates
+certs/
+
+# IDE
+.vscode/settings.json
+*.code-workspace
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+.tmp_*.ini
+.cache/
+
+# Backup files
+*.bak
+*~
+*.orig
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Build output
+build/
+dist/
+
+# Test coverage
+coverage/
+
+# Logs
+logs/
+*.log
+
+# TypeScript
+*.tsbuildinfo
