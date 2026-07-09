@@ -7,6 +7,9 @@ body {
 
     margin: 1rem;
 }
+section {
+    text-align: justify;
+}
 
 a {
     color: #0B57d0;

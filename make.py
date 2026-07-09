@@ -11,7 +11,8 @@ manifest = os.path.join(dist, "manifest.json")
 
 betterbird_block_files = [
     os.path.join(dist, "closeToTray.js"),
-    os.path.join(dist, "ui/error.html")
+    os.path.join(dist, "ui/error.html"),
+    os.path.join(dist, "ui/error.js"),
 ]
 
 def get_archive_name(betterbird_enabled):

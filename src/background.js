@@ -46,7 +46,34 @@ function handleRestore(windowId) {
     browser.windows.onFocusChanged.removeListener(handleRestore);
 }
 
-messenger.windows.onCreated.addListener(handleWindow);
-messenger.windows.getAll().then(openWindows => openWindows.forEach(handleWindow));
+async function handleSunset() {
+    const storage = await browser.storage.local.get(["status", "options"]);
+    const status = storage.status ?? {};
 
-browser.runtime.onStartup.addListener(handleStartup);
+    // display a sunset message
+    if (!status.sunsetAcknowledged) {
+        handleFailure({ code: "sunset", migrated: !status.migrated });
+    }
+
+    // enable native close to tray / start in tray
+    if (!status.migrated) {
+        messenger.closeToTray.migrateToNative();
+        if (storage.options?.startInTray)
+            messenger.startInTray.migrateToNative();
+
+        status.migrated = true;
+        await browser.storage.local.set({ status });
+    }
+}
+
+messenger.closeToTray.hasNativeCloseToTray().then(nativeCloseToTray => {
+    if (!nativeCloseToTray) {
+        messenger.windows.onCreated.addListener(handleWindow);
+        messenger.windows.getAll().then(openWindows => openWindows.forEach(handleWindow));
+
+        browser.runtime.onStartup.addListener(handleStartup);
+    }
+    else {
+        handleSunset();
+    }
+});

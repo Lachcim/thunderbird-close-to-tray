@@ -1,7 +1,15 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Couldn't move Thunderbird to the tray - Close to Tray</title>
+        <!-- beginNoBetterbird -->
+        <title class="linuxUnsupported" hidden>Couldn't move Thunderbird to the tray - Close to Tray</title>
+        <!-- endNoBetterbird -->
+        <!-- beginBetterbird -->
+        <title class="noBetterbird oldBetterbird noDesktopEnvironment unsupportedDesktopEnvironment" hidden>
+            Couldn't move Thunderbird to the tray - Close to Tray
+        </title>
+        <!-- endBetterbird -->
+        <title class="sunset" hidden>You don't need Close to Tray anymore - Close to Tray</title>
 
         <link rel="stylesheet" href="error.css">
         <script src="error.js"></script>
@@ -9,24 +17,33 @@
     <body>
         <div class="logo">
             <img src="../img/256-transparent.png" alt="Close to Tray">
-            <h1>Couldn't move Thunderbird to the tray</h1>
+            <!-- beginNoBetterbird -->
+            <h1 class="linuxUnsupported" hidden>Couldn't move Thunderbird to the tray</h1>
+            <!-- endNoBetterbird -->
+            <!-- beginBetterbird -->
+            <h1 class="noBetterbird oldBetterbird noDesktopEnvironment unsupportedDesktopEnvironment" hidden>
+                Couldn't move Thunderbird to the tray
+            </h1>
+            <!-- endBetterbird -->
+            <h1 class="sunset" hidden>You don't need Close to Tray anymore</h1>
         </div>
         <!-- beginNoBetterbird -->
         <section class="linuxUnsupported" hidden>
             <p>
-                Close to Tray couldn't move your window to the tray because Thunderbird on Linux lacks tray support.
+                Close to Tray couldn't move your window to the tray because Thunderbird on Linux offers limited tray support.
             </p>
             <p>
-                Close to Tray only works if the following option is available in settings:
+                Close to Tray only works if one of the following options is available in settings:
             </p>
-            <blockquote>
-                When Thunderbird is minimized, move it to the tray
-            </blockquote>
+            <ul>
+                <li>When Thunderbird is minimized, move it to the tray</li>
+                <li>When Thunderbird is closed, move it to the tray</li>
+            </ul>
             <p>
-                This option is not available on Linux clients, so Close to Tray can't interact with the tray.
+                Neither of these options is available on Linux, so Close to Tray can't interact with the tray.
             </p>
             <p>
-                <button class="close">Close</button>
+                <button class="uninstall">Uninstall Close to Tray</button>
             </p>
         </section>
         <!-- endNoBetterbird -->
@@ -60,7 +77,7 @@
                 This version of Betterbird is not supported. Please upgrade to Betterbird version 102.15.1 or newer.
             </p>
             <p>
-                Support for system tray on Linux was introduced in Betterbird 102.15.1. This is Betterbird <span id="version"></span>.
+                Support for system tray on Linux was introduced in Betterbird 102.15.1. This is Betterbird <span class="version"></span>.
             </p>
             <p>
                 <a href="https://betterbird.eu" class="button">Get Betterbird</a>
@@ -80,7 +97,7 @@
             </p>
             <p>
                 If you wish to override this check, add the value
-                <code class="unsupportedDesktopEnvironment" id="desktopEnvironment" hidden></code>
+                <code class="unsupportedDesktopEnvironment desktopEnvironment" hidden></code>
                 <code class="noDesktopEnvironment" hidden>no-DE</code>
                 to the following setting: <code>mail.minimizeToTray.supportedDesktops</code>
             </p>
@@ -102,5 +119,31 @@
             </p>
         </section>
         <!-- endBetterbird -->
+        <section class="sunset" hidden>
+            <p>
+                Your Thunderbird client has <strong>native support</strong> for closing to tray. You no longer need an extension to do this.
+            </p>
+            <p>
+                Thunderbird now offers the following settings:
+            </p>
+            <ul>
+                <li>When Thunderbird is closed, move it to the tray</li>
+                <ul>
+                    <li>Start Thunderbird in the tray</li>
+                </ul>
+            </ul>
+            <p>
+                <b class="migrated" hidden>These settings have been updated to match your current Close to Tray preferences.</b>
+                It's now also possible to exit Thunderbird by right-clicking the tray icon and pressing "Exit".
+            </p>
+            <p>
+                This change was made possible by the author of Close to Tray with the help of the Thunderbird development team.
+                <a href="https://github.com/Lachcim/thunderbird-close-to-tray/issues/7" target="_blank">Learn more</a>
+            </p>
+            <p>
+                <button class="uninstall">Uninstall Close to Tray</button>
+                <button class="close sunsetAcknowledged">Don't show this again</button>
+            </p>
+        </section>
     </body>
 </html>

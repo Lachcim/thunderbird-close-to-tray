@@ -4,6 +4,8 @@ this.startInTray = (() => {
         catch { return ChromeUtils.import("resource://gre/modules/ExtensionCommon.jsm"); }
     })();
 
+    const preferences = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+
     let originalCreateStateObject = null;
 
     function createFakeStateObject(...args) {
@@ -57,13 +59,19 @@ this.startInTray = (() => {
         SessionStoreManager._openOtherRequiredWindows(parentWindow);
     }
 
+    function migrateToNative() {
+        if (!preferences.prefHasUserValue("mail.closeToTray.startInTray"))
+            preferences.setBoolPref("mail.closeToTray.startInTray", true);
+    }
+
     return class StartInTray extends ExtensionCommon.ExtensionAPI {
         getAPI(context) {
             return {
                 startInTray: {
                     hijackSessionStoreManager: hijackSessionStoreManager.bind(null, context),
                     restoreSessionStoreManager: restoreSessionStoreManager.bind(null, context),
-                    restoreHiddenWindows: restoreHiddenWindows.bind(null, context)
+                    restoreHiddenWindows: restoreHiddenWindows.bind(null, context),
+                    migrateToNative
                 }
             };
         }

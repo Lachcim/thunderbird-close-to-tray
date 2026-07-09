@@ -10,6 +10,19 @@ this.closeToTray = (() => {
     const appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
     const gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
 
+    const nativeCloseToTray = (() => {
+        try {
+            ChromeUtils.importESModule("chrome://messenger/content/closeToTray.mjs");
+        }
+        catch (error) {
+            // a successful import of closeToTray.mjs will throw a ReferenceError, only catch import errors here
+            if (error.constructor.name == "Error")
+                return false;
+        }
+
+        return true;
+    })();
+
     const restorers = new Map();
     const emitter = new ExtensionCommon.EventEmitter();
 
@@ -119,6 +132,11 @@ this.closeToTray = (() => {
         });
     }
 
+    function migrateToNative() {
+        if (!preferences.prefHasUserValue("mail.closeToTray"))
+            preferences.setBoolPref("mail.closeToTray", true);
+    }
+
     return class CloseToTray extends ExtensionCommon.ExtensionAPI {
         getAPI(context) {
             const onFailParams = {
@@ -136,6 +154,8 @@ this.closeToTray = (() => {
                 closeToTray: {
                     registerWindow: registerWindow.bind(null, context),
                     moveToTray: moveToTrayById.bind(null, context),
+                    hasNativeCloseToTray: async () => nativeCloseToTray,
+                    migrateToNative,
                     onFail: new ExtensionCommon.EventManager(onFailParams).api()
                 }
             };

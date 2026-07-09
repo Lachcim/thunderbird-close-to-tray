@@ -1,4 +1,12 @@
 window.addEventListener("load", async () => {
+    const nativeCloseToTray = await browser.closeToTray.hasNativeCloseToTray();
+    Array.from(document.body.children).forEach(child => {
+        if (child.classList.contains("sunset") == nativeCloseToTray)
+            child.hidden = false;
+        else
+            child.remove();
+    });
+
     const storage = await browser.storage.local.get("options");
     const options = storage.options ?? { startInTray: false };
 

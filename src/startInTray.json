@@ -28,6 +28,13 @@
                         "description": "ID of the parent window."
                     }
                 ]
+            },
+            {
+                "name": "migrateToNative",
+                "type": "function",
+                "description": "Enable native start to tray",
+                "async": false,
+                "parameters": []
             }
         ]
     }

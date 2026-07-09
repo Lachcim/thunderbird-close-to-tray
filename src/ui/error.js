@@ -11,7 +11,31 @@ window.addEventListener("load", () => {
             browser.windows.remove(window.id);
         })
     );
+    Array.from(document.getElementsByClassName("uninstall")).forEach(
+        button => button.addEventListener("click", () => {
+            browser.management.uninstallSelf();
+        })
+    );
+    Array.from(document.getElementsByClassName("sunsetAcknowledged")).forEach(
+        button => button.addEventListener("click", async () => {
+            const storage = await browser.storage.local.get("status");
+            const status = storage.status ?? {};
 
-    document.getElementById("version").innerText = params.get("version");
-    document.getElementById("desktopEnvironment").innerText = params.get("desktopEnvironment");
+            status.sunsetAcknowledged = true;
+            await browser.storage.local.set({ status });
+        })
+    );
+    /* beginBetterbird */
+    Array.from(document.getElementsByClassName("version")).forEach(
+        node => node.innerText = params.get("version")
+    );
+    Array.from(document.getElementsByClassName("desktopEnvironment")).forEach(
+        node => node.innerText = params.get("desktopEnvironment")
+    );
+    /* endBetterbird */
+    Array.from(document.getElementsByClassName("migrated")).forEach(
+        node => node.hidden = params.get("migrated") == "false"
+    );
+
+    Array.from(document.querySelectorAll("[hidden]")).forEach(element => element.remove());
 });

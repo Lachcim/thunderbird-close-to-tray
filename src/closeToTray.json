@@ -27,6 +27,20 @@
                         "description": "ID of the window."
                     }
                 ]
+            },
+            {
+                "name": "hasNativeCloseToTray",
+                "type": "function",
+                "description": "Checks if the client has native support for close to tray",
+                "async": true,
+                "parameters": []
+            },
+            {
+                "name": "migrateToNative",
+                "type": "function",
+                "description": "Enable native close to tray",
+                "async": false,
+                "parameters": []
             }
         ],
         "events": [
