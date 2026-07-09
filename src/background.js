@@ -8,6 +8,9 @@ function handleWindow(window) {
 }
 
 async function handleStartup() {
+    if (await messenger.closeToTray.hasNativeCloseToTray())
+        return;
+
     // check if start in tray is enabled
     const storage = await browser.storage.local.get("options");
     if (!storage.options?.startInTray)
@@ -70,10 +73,10 @@ messenger.closeToTray.hasNativeCloseToTray().then(nativeCloseToTray => {
     if (!nativeCloseToTray) {
         messenger.windows.onCreated.addListener(handleWindow);
         messenger.windows.getAll().then(openWindows => openWindows.forEach(handleWindow));
-
-        browser.runtime.onStartup.addListener(handleStartup);
     }
     else {
         handleSunset();
     }
 });
+
+browser.runtime.onStartup.addListener(handleStartup);
