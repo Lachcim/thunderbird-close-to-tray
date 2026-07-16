@@ -12,6 +12,9 @@ this.closeToTray = (() => {
 
     const nativeCloseToTray = (() => {
         try {
+            if (!ChromeUtils.importESModule)
+                return false;
+
             ChromeUtils.importESModule("chrome://messenger/content/closeToTray.mjs");
         }
         catch (error) {
